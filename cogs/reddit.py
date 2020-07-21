@@ -6,7 +6,7 @@ from config import REDDIT_CLIENT, REDDIT_SECRET, REDDIT_ACCOUNT_PW, REDDIT_ACCOU
 
 reddit = praw.Reddit(client_id=REDDIT_CLIENT, client_secret=REDDIT_SECRET,
                      password=REDDIT_ACCOUNT_PW,
-                     user_agent=f"Aspect:com.github.PhaseRush.Aspect:v2.0 (by /u/{REDDIT_ACCOUNT_IG})",
+                     user_agent=f"Aspect:com.github.PhaseRush.Aspect:v3.0.0 (by /u/{REDDIT_ACCOUNT_IG})",
                      username=REDDIT_ACCOUNT_IG)
 
 
