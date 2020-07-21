@@ -6,7 +6,7 @@ from config import REDDIT_CLIENT, REDDIT_SECRET, REDDIT_ACCOUNT_PW, REDDIT_ACCOU
 
 reddit = praw.Reddit(client_id=REDDIT_CLIENT, client_secret=REDDIT_SECRET,
                      password=REDDIT_ACCOUNT_PW,
-                     user_agent=f"Aspect:com.github.PhaseRush.Aspect:v3.0.0 (by /u/{REDDIT_ACCOUNT_IG})",
+                     user_agent=f"Aspect:com.github.PhaseRush.Aspect:v2.0 (by /u/{REDDIT_ACCOUNT_IG})",
                      username=REDDIT_ACCOUNT_IG)
 
 
@@ -22,12 +22,24 @@ class Redditor(commands.Cog, name='Reddit'):
         idx = 0
         for submission in subreddit:
             if idx == index:
-                await ctx.send(submission.url)
+                await ctx.send(embed=self.submission_to_embed(submission))
             else:
                 idx += 1
 
+    def submission_to_embed(self, submission: Submission) -> discord.Embed:
+        return discord.Embed(
+            title=submission.title,
+            url=submission.url,
+            timestamp=datetime.fromtimestamp(submission.created_utc),
+            colour=discord.Colour.gold()
+        ) \
+            .set_image(url=submission.url) \
+            .set_author(name=submission.author.name, url="http://google.com", icon_url=submission.author.icon_img) \
+            .set_footer(text="footer text", icon_url="http://youtube.com")
+
     @sub.error
     async def sub_error_handler(self, ctx, error):
+        print(error)
         await ctx.send(f"There's been an error!\n{error}")
 
 
