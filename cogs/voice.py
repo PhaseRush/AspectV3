@@ -1,5 +1,4 @@
 from discord.ext import commands
-import asyncio
 
 
 class VoiceCog(commands.Cog, name="Voice"):
