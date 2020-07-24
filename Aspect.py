@@ -15,7 +15,8 @@ async def on_ready():
 
 extensions = ['cogs.' + cog_name for cog_name in [
     'meta',
-    'reddit'
+    'reddit',
+    'voice'
 ]]
 
 [bot.load_extension(ext) for ext in extensions]
