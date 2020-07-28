@@ -1,5 +1,9 @@
+from datetime import datetime
+
+import discord
 import praw
 from discord.ext import commands
+from praw.models import ListingGenerator, Submission
 
 from Utils import timeit
 from config import REDDIT_CLIENT, REDDIT_SECRET, REDDIT_ACCOUNT_PW, REDDIT_ACCOUNT_IG
@@ -29,8 +33,8 @@ class Redditor(commands.Cog, name='Reddit'):
 
     @commands.command(aliases=['nudes'])
     @timeit
-    async def sub(self, ctx, subreddit_name, index=0):
-        subreddit = reddit.subreddit(subreddit_name).new(limit=index + 1)
+    async def sub(self, ctx, subreddit_name: str, index: int = 0) -> None:
+        subreddit: ListingGenerator = reddit.subreddit(subreddit_name).new(limit=index + 1)
         idx = 0
         for submission in subreddit:
             if idx == index:

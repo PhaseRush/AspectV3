@@ -30,7 +30,7 @@ def timeit(f):
     async def timer(*args, **kwargs):
         start = time.time()
         result = await f(*args, **kwargs)
-        print(f'Execution time for: {f.name}: {time.time() - start}s')
+        print(f'Execution time for command {f.__name__}: {"{:10.4f}".format((time.time() - start) * 1000)}ms')
         return result
 
     return timer
