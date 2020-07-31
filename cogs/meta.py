@@ -35,6 +35,9 @@ class MetaCog(commands.Cog, name="Meta"):
     @commands.command()
     @timeit
     async def ping(self, ctx: commands.Context, sample_size: int = 3):
+        if 0 > sample_size > 10:
+            await ctx.send(content="Invalid range! Please pick a number between (0, 10)")
+            return
         websocket_latencies = []
         gateway_pings = []
         api_pings = []
