@@ -23,8 +23,8 @@ class WolframCog(commands.Cog, name="Voice"):
         self.wolfram = wolframalpha.Client(WOLFRAM_ALPHA_APP_ID)
 
     @commands.command(aliases=["_", "__"])
-    async def wolf(self, ctx: commands.Context, args):
-        res = self.wolfram.query(args)
+    async def wolf(self, ctx: commands.Context, *args):  # ["temperature" "in" "vancouver"]
+        res = self.wolfram.query(' '.join(args))
         texts = next(res.results).text
         # await ctx.send(embed=)
         await ctx.send(content=texts)
