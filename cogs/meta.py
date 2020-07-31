@@ -38,9 +38,9 @@ class MetaCog(commands.Cog, name="Meta"):
         websocket_latencies = []
         gateway_pings = []
         api_pings = []
-        msg = await ctx.send("Checking ping..")
+        msg = await ctx.send("Checking ping...")
         for n in range(sample_size):
-            await msg.edit(content="Checking ping....")
+            await msg.edit(content=f"Checking ping ... {n + 1}/{sample_size}")
             (websocket_latency, gateway_ping, api_ping) = await find_ping(ctx, msg)
             websocket_latencies.append(websocket_latency)
             gateway_pings.append(gateway_ping)
@@ -50,13 +50,12 @@ class MetaCog(commands.Cog, name="Meta"):
             gateway_mean, gateway_dev = get_stats(gateway_pings)
             api_mean, api_dev = get_stats(api_pings)
 
-            await msg.edit(content=f"Checking ping...```\n"
-                                   f"Iteration: {n + 1}/{sample_size}\n"
-                                   f"Websocket Latency: {websocket_mean: .3f} +- {websocket_dev: .3f}ms\n"
-                                   f"Gateway Ping: {gateway_mean: .3f} +- {gateway_dev: .3f}ms\n"
-                                   f"Api Ping: {api_mean: .3f} +- {api_dev: .3f}ms\n"
-                                   f"Total ping: {(websocket_mean + gateway_mean + api_mean): .3f} +- "
-                                   f"{sqrt(websocket_dev ** 2 + gateway_dev ** 2 + api_dev ** 2): .3f}ms```")
+            await msg.edit(content=f"Checking ping... {n + 1}/{sample_size}```\n"
+                                   f"{'Websocket': >10}: {websocket_mean: >10.3f} ± {websocket_dev: >8.3f}ms\n"
+                                   f"{'Gateway': >10}: {gateway_mean: >10.3f} ± {gateway_dev: >8.3f}ms\n"
+                                   f"{'Api': >10}: {api_mean: >10.3f} ± {api_dev: >8.3f}ms\n"
+                                   f"{'Total': >10}: {(websocket_mean + gateway_mean + api_mean): > 10.3f} ± "
+                                   f"{sqrt(websocket_dev ** 2 + gateway_dev ** 2 + api_dev ** 2): >8.3f}ms```")
             await asyncio.sleep(3)
 
     @commands.is_owner()
