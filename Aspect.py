@@ -5,6 +5,7 @@ import traceback
 import discord
 from discord.ext import commands
 
+from cogs.reddit import SubredditLinker
 from config import DISCORD_TOKEN
 
 bot = commands.Bot(command_prefix='$', description="actually put something useful here eventually...",
@@ -14,6 +15,7 @@ bot = commands.Bot(command_prefix='$', description="actually put something usefu
 @bot.event
 async def on_ready():
     print(f'Logged on as {bot.user.name} id:{bot.user.id} at {datetime.datetime.now()}')
+    subr: SubredditLinker = SubredditLinker(bot=bot)
 
 
 def load_cog(ext: str) -> int:

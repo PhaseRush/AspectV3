@@ -33,6 +33,10 @@ class MetaCog(commands.Cog, name="Meta"):
         self.bot = bot
 
     @commands.command()
+    async def hello(self, ctx: commands.Context):
+        await ctx.send("hellowo")
+
+    @commands.command()
     @timeit
     async def ping(self, ctx: commands.Context, sample_size: int = 3):
         if 0 > sample_size > 10:

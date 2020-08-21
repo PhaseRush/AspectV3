@@ -1,11 +1,12 @@
 from datetime import datetime
+from typing import List
 
 import discord
 import praw
 from discord.ext import commands
 from praw.models import ListingGenerator, Submission
 
-from Utils import timeit
+from Utils import timeit, Scheduler
 from config import REDDIT_CLIENT, REDDIT_SECRET, REDDIT_ACCOUNT_PW, REDDIT_ACCOUNT_IG
 
 reddit = praw.Reddit(client_id=REDDIT_CLIENT, client_secret=REDDIT_SECRET,
@@ -48,5 +49,38 @@ class Redditor(commands.Cog, name='Reddit'):
         await ctx.send(f"There's been an error!\n{error}")
 
 
+class SubredditLinker(commands.Cog, name='SubredditLinker'):
+    def __init__(self, bot):
+        self.bot = bot
+        self.subreddit_name: str = "bapcsalescanada"
+        self.channel_id: str = "746506421775892521"
+        self.latest_post_url: str = ""
+        self.scheduler: Scheduler = Scheduler(10, self.mirror)
+        self.scheduler.start()
+
+    def find_latest_posts(self) -> List[reddit.submission]:
+        subreddit: ListingGenerator = reddit.subreddit(self.subreddit_name).new(3)
+        if self.latest_post_url == "":  # first time running
+            return list(subreddit)
+        else:
+            to_post = []
+            for submission in subreddit:
+                if submission.url == self.latest_post_url:
+                    break
+                else:
+                    to_post.append(submission)
+            return to_post
+
+    async def mirror(self):
+        channel: discord.abc.GuildChannel = self.bot.get_channel(channel_id=self.channel_id)
+        print("mirror called")
+        submissions = self.find_latest_posts()
+        while submissions:
+            sub = submissions.pop()
+            await channel.send(embed=submission_to_embed(sub))
+            self.latest_post_url = sub.url
+
+
 def setup(bot):
     bot.add_cog(Redditor(bot))
+    # bot.add_cog(SubredditLinker(bot))
