@@ -4,6 +4,8 @@ import traceback
 
 import discord
 from discord.ext import commands
+from discord.ext import tasks
+from datetime import datetime
 
 from cogs.reddit import SubredditLinker
 from config import DISCORD_TOKEN
@@ -12,9 +14,17 @@ bot = commands.Bot(command_prefix='$', description="actually put something usefu
                    activity=discord.Activity(type=discord.ActivityType.watching, name="cat girls"))
 
 
+@tasks.loop(minutes=60)
+async def genshin_login_reminder(self):
+    if datetime.now().hour == 15:
+        embed = discord.Embed(title="Daily Genshin Reminder", url="https://webstatic-sea.mihoyo.com/ys/event/signin-sea/index.html?act_id=e202102251931481&lang=en-us")
+        await self.bot.get_channel("809702154725097533").send(embed=embed)
+
+
 @bot.event
 async def on_ready():
     print(f'Logged on as {bot.user.name} id:{bot.user.id} at {datetime.datetime.now()}')
+    genshin_login_reminder.start()
     subr: SubredditLinker = SubredditLinker(bot=bot)
 
 
