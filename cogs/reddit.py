@@ -55,7 +55,7 @@ class SubredditLinker(commands.Cog, name='SubredditLinker'):
         self.subreddit_name: str = "bapcsalescanada"
         self.channel_id: str = "746506421775892521"
         self.latest_post_url: str = ""
-        self.scheduler: Scheduler = Scheduler(10, self.mirror)
+        self.scheduler: Scheduler = Scheduler(1, self.mirror)
         self.scheduler.start()
 
     def find_latest_posts(self) -> List[reddit.submission]:
@@ -72,8 +72,8 @@ class SubredditLinker(commands.Cog, name='SubredditLinker'):
             return to_post
 
     async def mirror(self):
+        # print("mirror called")
         channel: discord.abc.GuildChannel = self.bot.get_channel(channel_id=self.channel_id)
-        print("mirror called")
         submissions = self.find_latest_posts()
         while submissions:
             sub = submissions.pop()

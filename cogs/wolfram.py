@@ -25,9 +25,16 @@ class WolframCog(commands.Cog, name="Voice"):
     @commands.command(aliases=["_", "__"])
     async def wolf(self, ctx: commands.Context, *args):  # ["temperature" "in" "vancouver"]
         res = self.wolfram.query(' '.join(args))
-        texts = next(res.results).text
-        # await ctx.send(embed=)
-        await ctx.send(content=texts)
+        try:
+            texts = next(res.results).text
+            # await ctx.send(embed=)
+            await ctx.send(content=texts)
+        except StopIteration:
+            for pod in res.pods:
+                for sub in pod.subpods:
+                    print(1)
+                    x = sub.img.src
+
 
 
 def setup(bot):
