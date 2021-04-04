@@ -20,10 +20,11 @@ FIAT_SET = {
     "USD", "CAD", "GBP", "EUR"
 }
 
-INVALID_UPDATE_EXAMPLE = "ETH:2.091, BTC:0.0023, USD:230.01"
+INVALID_UPDATE_EXAMPLE = "ETH:2.091 BTC:0.0023 USD:230.01"
 
 PORTFOLIO_UPDATE_ALIASES = {"update", "replace", "set"}
 PORTFOLIO_VIEW_ALIASES = {"view", "check", "value", "show", None}  # None for default option
+PORTFOLIO_CHANGE_DEFAULT_FIAT = {"default_fiat", "fiat"}
 
 
 class Crypto(commands.Cog, name="Crypto"):
@@ -91,34 +92,45 @@ class Crypto(commands.Cog, name="Crypto"):
         except Exception as e:
             await ctx.send(str(e))
 
+    def persist_profiles(self):
+        with open("./data/crypto_profiles.json", "w") as f:
+            json.dump(self.user_profiles, f, indent=4)
+
     # noinspection PyBroadException
     @commands.command(aliases=["port", "value"])
     async def portfolio(self, ctx: commands.Context, *args: tuple):
         portfolio: {} = self.user_profiles.get(str(ctx.author.id), {})
-        args: List[str] = [] if len(args) == 0 else [re.sub(r"[^a-zA-Z0-9_:]+", "", str(arg)) for arg in
-                                                     args]  # re.split("[\\s,]+", args)
+        args: List[str] = [] if len(args) == 0 else [re.sub(r"[^a-zA-Z0-9_:]+", "", str(arg)) for arg in args]
         command: str = args[0] if args else None  # get first or None if not exists
         if command in PORTFOLIO_VIEW_ALIASES:
-            # show port
-            await ctx.send(json.dumps(portfolio))
+            if not portfolio:
+                await ctx.send("Your portfolio is empty. Use \"`set`\" to make your portfolio.")
+            else:
+                await ctx.send(json.dumps(portfolio))  # todo: pretty print
         elif command in PORTFOLIO_UPDATE_ALIASES:
-            # validate input todo
-            # replace dict
             currencies = {}
             try:
                 for entry in args[1:]:  # skip first entry since it is a command
                     currency, amount = entry.split(":")
-                    if currency in self.tickers.keys():
+                    if currency in self.tickers.keys() | FIAT_SET:  # union crypto and fiat symbols
                         currencies[currency] = float(amount)
 
                 portfolio["Currencies"] = currencies
                 self.user_profiles[str(ctx.author.id)] = portfolio
-                with open("./data/crypto_profiles.json", "w") as f:
-                    json.dump(self.user_profiles, f, indent=4)
+                self.persist_profiles()
+                await ctx.send("Portfolio updated.")
             except Exception:
-                await ctx.send("Sorry, invalid input. Use this as an example:\n" + INVALID_UPDATE_EXAMPLE)
+                await ctx.send(
+                    "Sorry, invalid input. Use this as an example:\n`$port set " + INVALID_UPDATE_EXAMPLE + "`")
 
-            # self.user_profiles[ctx.author.id] =
+        elif command in PORTFOLIO_CHANGE_DEFAULT_FIAT:
+            desired = args[1].upper()
+            if desired not in FIAT_SET:
+                await ctx.send("Sorry, your fiat currency must be one of " + ",".join(FIAT_SET))
+                return
+            self.user_profiles[str(ctx.author.id)]["default_fiat"] = desired
+            self.persist_profiles()
+            await ctx.send("Default fiat currency updated to " + desired)
         else:
             await ctx.send(f"""
             Invalid command. Try again using one of the commands below:
