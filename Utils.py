@@ -63,7 +63,7 @@ class Scheduler(object):
             self._lock.release()
 
     def _run(self):
-        print(f"run called, function = {self.function}")
+        # print(f"run called, function = {self.function}")
         self.start(from_run=True)
         self.function(*self.args, **self.kwargs)
 
