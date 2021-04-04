@@ -20,6 +20,11 @@ FIAT_SET = {
     "USD", "CAD", "GBP", "EUR"
 }
 
+INVALID_UPDATE_EXAMPLE = "ETH:2.091, BTC:0.0023, USD:230.01"
+
+PORTFOLIO_UPDATE_ALIASES = {"update", "replace", "set"}
+PORTFOLIO_VIEW_ALIASES = {"view", "check", "value", "show", None}  # None for default option
+
 
 class Crypto(commands.Cog, name="Crypto"):
     def __init__(self, bot):
@@ -35,7 +40,7 @@ class Crypto(commands.Cog, name="Crypto"):
             'apiKey': KRAKEN_API_KEY,
             'secret': KRAKEN_API_PRIVATE_KEY,
         })
-        print("ETH/CAD", json.dumps(self.kraken.fetch_ticker("ETH/CAD")["close"], indent=1))
+        # print("ETH/CAD", json.dumps(self.kraken.fetch_ticker("ETH/CAD")["close"], indent=1))
 
     def get_price(self, origin: str, target: str) -> float:
         if origin == target:
@@ -86,23 +91,40 @@ class Crypto(commands.Cog, name="Crypto"):
         except Exception as e:
             await ctx.send(str(e))
 
+    # noinspection PyBroadException
     @commands.command(aliases=["port", "value"])
-    async def portfolio(self, ctx: commands.Context, *, args: str):
-        portfolio: int = self.user_profiles.get(ctx.author.id, {})
-        print(args)
-        args: List[str] = re.split("\\s+", args)
-        command: str = args[0]
-        if len(args) == 0:
+    async def portfolio(self, ctx: commands.Context, *args: tuple):
+        portfolio: {} = self.user_profiles.get(str(ctx.author.id), {})
+        args: List[str] = [] if len(args) == 0 else [re.sub(r"[^a-zA-Z0-9_:]+", "", str(arg)) for arg in
+                                                     args]  # re.split("[\\s,]+", args)
+        command: str = args[0] if args else None  # get first or None if not exists
+        if command in PORTFOLIO_VIEW_ALIASES:
             # show port
-            pass
-        elif command in {"update", "replace"}:
+            await ctx.send(json.dumps(portfolio))
+        elif command in PORTFOLIO_UPDATE_ALIASES:
             # validate input todo
             # replace dict
-            self.user_profiles[ctx.author.id] =
-            pass
-        elif command == "value":
-            # calc value
-            pass
+            currencies = {}
+            try:
+                for entry in args[1:]:  # skip first entry since it is a command
+                    currency, amount = entry.split(":")
+                    if currency in self.tickers.keys():
+                        currencies[currency] = float(amount)
+
+                portfolio["Currencies"] = currencies
+                self.user_profiles[str(ctx.author.id)] = portfolio
+                with open("./data/crypto_profiles.json", "w") as f:
+                    json.dump(self.user_profiles, f, indent=4)
+            except Exception:
+                await ctx.send("Sorry, invalid input. Use this as an example:\n" + INVALID_UPDATE_EXAMPLE)
+
+            # self.user_profiles[ctx.author.id] =
+        else:
+            await ctx.send(f"""
+            Invalid command. Try again using one of the commands below:
+            Your portfolio's value:\t{",".join(PORTFOLIO_VIEW_ALIASES)}
+            Update your portfolio:\t{",".join(PORTFOLIO_UPDATE_ALIASES)}
+            """)
 
 
 def setup(bot):

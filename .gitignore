@@ -1,3 +1,6 @@
+./data/crypto_profiles.json
+./config.py
+
 # idea/pycharm things
 .idea/*
 
