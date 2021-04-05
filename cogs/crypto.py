@@ -1,22 +1,15 @@
-import ccxt
-import json
-
-from ccxt.base.errors import BadSymbol, RateLimitExceeded
-import os
-
-import uuid
-from math import sqrt
-from statistics import fmean, pstdev
-from typing import List, OrderedDict
-
-import random
-import Utils
-import discord
-from discord.ext import commands
 import datetime
-import asyncio
+import json
+import random
 import re
+from typing import List
 
+import ccxt
+import discord
+from ccxt.base.errors import BadSymbol, RateLimitExceeded
+from discord.ext import commands
+
+import Utils
 from config import KRAKEN_API_KEY, KRAKEN_API_PRIVATE_KEY
 
 FIAT_SET = {
