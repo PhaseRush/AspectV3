@@ -9,6 +9,8 @@ from math import sqrt
 from statistics import fmean, pstdev
 from typing import List, OrderedDict
 
+import random
+import Utils
 import discord
 from discord.ext import commands
 import datetime
@@ -47,8 +49,17 @@ class Crypto(commands.Cog, name="Crypto"):
     def get_price(self, origin: str, target: str) -> float:
         if origin == target:
             return 1.0
+        if origin in FIAT_SET and target in FIAT_SET:  # both fiat
+            try:
+                if random.getrandbits(1):
+                    return self.kraken.fetch_ticker(f"{target}/{origin}")['close']
+                else:
+                    return self.kraken.fetch_ticker(f"{origin}/{target}")['close']
+            except BadSymbol:
+                return self.get_price(target, origin)
         if origin in FIAT_SET:
             return 1.0 / self.get_price(target, origin)
+
         price: float
         common_currency = "USD" if "USD" not in {origin, target} else "CAD"
         try:
@@ -146,7 +157,10 @@ class Crypto(commands.Cog, name="Crypto"):
 
         values = {ticker: self.get_price(ticker, target_fiat) * amount for ticker, amount in portfolio.items()}
         values = dict(reversed(sorted(values.items(), key=lambda entry: entry[1])))
-        desc = "\n".join([f"{ticker}:\t{value}" for ticker, value in values.items()])
+        calculated = Utils.merge_dicts(portfolio, values)
+        desc = f"{'Currency': <10}{'Quantity': ^8}{'Value (' + target_fiat + ')': ^15}\n" + \
+               "\n".join([f"{ticker: ^10}{value[0]: >8}{value[1]: >12.2f}" for ticker, value in calculated.items()]) + \
+               f"\n{'-'*31}\n{'Total value': <18}{sum(values.values()): >12.2f}"
 
         quote_symbol = "'"
         quote_symbol_s = "'s"

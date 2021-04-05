@@ -4,9 +4,12 @@ from functools import wraps
 from gc import get_referents
 from threading import Lock, Timer
 from types import ModuleType, FunctionType
-
+from collections import defaultdict
 
 # https://stackoverflow.com/a/30316760/10583298
+from typing import List
+
+
 def sizeof(obj):
     """sum size of object & members."""
     BLACKLIST = type, ModuleType, FunctionType
@@ -35,6 +38,15 @@ def timeit(f):
         return result
 
     return timer
+
+
+def merge_dicts(d1, d2):
+    dd = defaultdict(list)
+    for d in (d1, d2):
+        for k, v in d.items():
+            dd[k].append(v)
+
+    return dd
 
 
 # https://stackoverflow.com/a/18906292/10583298
