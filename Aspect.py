@@ -27,7 +27,7 @@ def load_cog(ext: str) -> int:
         tick = perf_counter()
         bot.load_extension(ext)
         tock = perf_counter()
-        print(f'Loaded {ext[5:]: <{reduce(max, map(len, os.listdir("./cogs"))) - 3}}in {(tock - tick):.5f}s')
+        print(f'Loaded {ext[5:]: <{max([len(file) for file in os.listdir("./cogs")]) - 3}}in {(tock - tick):.5f}s')
         return 1
     except Exception:
         print(f"Failed to load {ext}")

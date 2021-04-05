@@ -7,8 +7,9 @@ import os
 import uuid
 from math import sqrt
 from statistics import fmean, pstdev
-from typing import List
+from typing import List, OrderedDict
 
+import discord
 from discord.ext import commands
 import datetime
 import asyncio
@@ -99,14 +100,16 @@ class Crypto(commands.Cog, name="Crypto"):
     # noinspection PyBroadException
     @commands.command(aliases=["port", "value"])
     async def portfolio(self, ctx: commands.Context, *args: tuple):
-        portfolio: {} = self.user_profiles.get(str(ctx.author.id), {})
+        profile: {} = self.user_profiles.get(str(ctx.author.id), {})
+        portfolio: {} = profile.get("portfolio", {})
         args: List[str] = [] if len(args) == 0 else [re.sub(r"[^a-zA-Z0-9_:]+", "", str(arg)) for arg in args]
         command: str = args[0] if args else None  # get first or None if not exists
         if command in PORTFOLIO_VIEW_ALIASES:
-            if not portfolio:
+            if not profile:
                 await ctx.send("Your portfolio is empty. Use \"`set`\" to make your portfolio.")
             else:
-                await ctx.send(json.dumps(portfolio))  # todo: pretty print
+                await ctx.send(json.dumps(profile))  # todo: pretty print
+                await ctx.send(embed=await self.generate_portfolio_embed(ctx, portfolio))
         elif command in PORTFOLIO_UPDATE_ALIASES:
             currencies = {}
             try:
@@ -115,8 +118,8 @@ class Crypto(commands.Cog, name="Crypto"):
                     if currency in self.tickers.keys() | FIAT_SET:  # union crypto and fiat symbols
                         currencies[currency] = float(amount)
 
-                portfolio["Currencies"] = currencies
-                self.user_profiles[str(ctx.author.id)] = portfolio
+                profile["portfolio"] = currencies
+                self.user_profiles[str(ctx.author.id)] = profile
                 self.persist_profiles()
                 await ctx.send("Portfolio updated.")
             except Exception:
@@ -137,6 +140,33 @@ class Crypto(commands.Cog, name="Crypto"):
             Your portfolio's value:\t{",".join(PORTFOLIO_VIEW_ALIASES)}
             Update your portfolio:\t{",".join(PORTFOLIO_UPDATE_ALIASES)}
             """)
+
+    async def generate_mobile_embed(self, ctx: commands.Context, portfolio: dict) -> discord.Embed:
+        target_fiat = self.user_profiles.get(str(ctx.author.id), {}).get("default_fiat", "USD")
+
+        values = {ticker: self.get_price(ticker, target_fiat) * amount for ticker, amount in portfolio.items()}
+        values = dict(reversed(sorted(values.items(), key=lambda entry: entry[1])))
+        desc = "\n".join([f"{ticker}:\t{value}" for ticker, value in values.items()])
+
+        quote_symbol = "'"
+        quote_symbol_s = "'s"
+        embed: discord.Embed = discord.Embed(
+            title=f"{ctx.author.nick}{quote_symbol if ctx.author.nick[-1].lower() == 's' else quote_symbol_s} Portfolio",
+            description=f"```\n{desc}\n```",
+            timestamp=datetime.datetime.utcnow(),
+            colour=ctx.author.colour
+        )
+
+        return embed
+
+    async def generate_desktop_embed(self, ctx: commands.Context, portfolio: dict) -> discord.Embed:
+        pass
+
+    async def generate_portfolio_embed(self, ctx: commands.Context, portfolio: dict) -> discord.Embed:
+        # return await self.generate_mobile_embed(ctx,
+        #                                         portfolio) if ctx.author.is_on_mobile() else await self.generate_desktop_embed(
+        #     ctx, portfolio)
+        return await self.generate_mobile_embed(ctx, portfolio)
 
 
 def setup(bot):
