@@ -158,9 +158,10 @@ class Crypto(commands.Cog, name="Crypto"):
         values = {ticker: self.get_price(ticker, target_fiat) * amount for ticker, amount in portfolio.items()}
         values = dict(reversed(sorted(values.items(), key=lambda entry: entry[1])))
         calculated = Utils.merge_dicts(portfolio, values)
-        desc = f"{'Currency': <10}{'Quantity': ^8}{'Value (' + target_fiat + ')': ^15}\n" + \
-               "\n".join([f"{ticker: ^10}{value[0]: >8}{value[1]: >12.2f}" for ticker, value in calculated.items()]) + \
-               f"\n{'-'*31}\n{'Total value': <18}{sum(values.values()): >12.2f}"
+        desc = f"{'Currency': <12}{'Quantity': ^12}{'Value (' + target_fiat + ')': ^12}\n" + \
+               "\n".join([f"{ticker: ^10}{value[0]: >12}{value[1]: >12.2f}" for ticker, value in calculated.items()]) + \
+               f"\n{'-'*34}" +\
+               f"\n{'Total value': <18}{sum(values.values()): >16.2f}"
 
         quote_symbol = "'"
         quote_symbol_s = "'s"
