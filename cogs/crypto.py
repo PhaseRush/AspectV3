@@ -92,7 +92,7 @@ class Crypto(commands.Cog, name="Crypto"):
         ticker = ticker.upper()
         (origin, target) = ticker.split("/")
         try:
-            await ctx.send(f"{ticker}:\t{'{:.15f}'.format(self.get_price(origin, target))}")
+            await ctx.send(f"{ticker}:\t{'{:.5f}'.format(self.get_price(origin, target))}")
         except Exception as e:
             await ctx.send(str(e))
 
