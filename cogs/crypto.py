@@ -113,7 +113,7 @@ class Crypto(commands.Cog, name="Crypto"):
     async def portfolio(self, ctx: commands.Context, *args: tuple):
         profile: {} = self.user_profiles.get(str(ctx.author.id), {})
         portfolio: {} = profile.get("portfolio", {})
-        args: List[str] = [] if len(args) == 0 else [re.sub(r"[^a-zA-Z0-9_:]+", "", str(arg)) for arg in args]
+        args: List[str] = [] if len(args) == 0 else [re.sub(r"[^a-zA-Z0-9_.:]+", "", str(arg)) for arg in args]
         command: str = args[0] if args else None  # get first or None if not exists
         if command in PORTFOLIO_VIEW_ALIASES:
             if not profile:
