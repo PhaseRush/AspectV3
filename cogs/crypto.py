@@ -65,8 +65,7 @@ class Crypto(commands.Cog, name="Crypto"):
         try:
             price = self.kraken.fetch_ticker(f"{origin}/{target}")["close"]
         except BadSymbol:
-            print("Invalid ticker:", origin, target)
-            # attempt to fix
+            # attempt to fix invalid ticker
             try:
                 origin_to_common = self.get_price(origin, common_currency)
                 try:
@@ -119,7 +118,7 @@ class Crypto(commands.Cog, name="Crypto"):
             if not profile:
                 await ctx.send("Your portfolio is empty. Use \"`set`\" to make your portfolio.")
             else:
-                await ctx.send(json.dumps(profile))  # todo: pretty print
+                # await ctx.send(json.dumps(profile))  # todo: pretty print
                 await ctx.send(embed=await self.generate_portfolio_embed(ctx, portfolio))
         elif command in PORTFOLIO_UPDATE_ALIASES:
             currencies = {}
