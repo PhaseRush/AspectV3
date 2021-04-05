@@ -164,8 +164,9 @@ class Crypto(commands.Cog, name="Crypto"):
 
         quote_symbol = "'"
         quote_symbol_s = "'s"
+        name = ctx.author.nick or ctx.author.name
         embed: discord.Embed = discord.Embed(
-            title=f"{ctx.author.nick}{quote_symbol if ctx.author.nick[-1].lower() == 's' else quote_symbol_s} Portfolio",
+            title=f"{name}{quote_symbol if name[-1].lower() == 's' else quote_symbol_s} Portfolio",
             description=f"```\n{desc}\n```",
             timestamp=datetime.datetime.utcnow(),
             colour=ctx.author.colour
