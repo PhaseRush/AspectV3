@@ -39,35 +39,40 @@ class Crypto(commands.Cog, name="Crypto"):
         })
         # print("ETH/CAD", json.dumps(self.kraken.fetch_ticker("ETH/CAD")["close"], indent=1))
 
-    def get_price(self, origin: str, target: str) -> float:
+    def get_price(self, origin: str, target: str) -> (float, float):
         if origin == target:
-            return 1.0
+            return 1.0, 1.0
         if origin in FIAT_SET and target in FIAT_SET:  # both fiat
             try:
                 if random.getrandbits(1):
-                    return self.kraken.fetch_ticker(f"{target}/{origin}")['close']
+                    ticker = self.kraken.fetch_ticker(f"{target}/{origin}")
+                    return ticker['close'], ticker['info']['l'][1]
                 else:
-                    return self.kraken.fetch_ticker(f"{origin}/{target}")['close']
+                    ticker = self.kraken.fetch_ticker(f"{origin}/{target}")
+                    return ticker['close'], ticker['info']['l'][1]
             except BadSymbol:
                 return self.get_price(target, origin)
         if origin in FIAT_SET:
-            return 1.0 / self.get_price(target, origin)
+            a, b = self.get_price(target, origin)
+            return 1.0 / a, 1 / b
 
-        price: float
+        price: (float, float)
         common_currency = "USD" if "USD" not in {origin, target} else "CAD"
         try:
-            price = self.kraken.fetch_ticker(f"{origin}/{target}")["close"]
+            ticker = self.kraken.fetch_ticker(f"{origin}/{target}")
+            price = (ticker['close'], ticker['info']['l'][1])
         except BadSymbol:
             # attempt to fix invalid ticker
             try:
-                origin_to_common = self.get_price(origin, common_currency)
+                origin_to_common_price, origin_to_common_change = self.get_price(origin, common_currency)
                 try:
-                    common_to_target = self.get_price(common_currency, target)
+                    common_to_target_price, common_to_target_change = self.get_price(common_currency, target)
                 except BadSymbol:  # probably in USD/LTC-esque loop
-                    common_to_target = 1.0 / self.get_price(target, common_currency)
-                print(origin_to_common, common_to_target)
+                    target_to_common_price, target_to_common_change = self.get_price(target, common_currency)
+                    common_to_target_price = 1.0 / target_to_common_price
+                print(origin_to_common_price, common_to_target_price)
 
-                price = origin_to_common * common_to_target
+                price = (origin_to_common_price * common_to_target_price, origin_to_common_change)
             except Exception as e:
                 print("Failed auto fix", origin, target, e)
                 raise Exception("Unsupported ticker, automatic conversion failed. Try using USD.")
@@ -147,13 +152,18 @@ class Crypto(commands.Cog, name="Crypto"):
     async def generate_mobile_embed(self, ctx: commands.Context, portfolio: dict) -> discord.Embed:
         target_fiat = self.user_profiles.get(str(ctx.author.id), {}).get("default_fiat", "USD")
 
-        values = {ticker: self.get_price(ticker, target_fiat) * amount for ticker, amount in portfolio.items()}
+        values = {ticker: (self.get_price(ticker, target_fiat), amount) for ticker, amount in portfolio.items()}
+        values = {ticker: (pair_amount[0][0] * pair_amount[1], pair_amount[0][1]) for ticker, pair_amount in
+                  values.items()}
         values = dict(reversed(sorted(values.items(), key=lambda entry: entry[1])))
         calculated = Utils.merge_dicts(portfolio, values)
-        desc = f"{'Currency': <12}{'Quantity': ^12}{'Value (' + target_fiat + ')': ^12}\n" + \
-               "\n".join([f"{ticker: ^10}{value[0]: >12}{value[1]: >12.2f}" for ticker, value in calculated.items()]) + \
-               f"\n{'-'*34}" +\
-               f"\n{'Total value': <18}{sum(values.values()): >16.2f}"
+        desc = f"{'Currency': <12}{'Quantity': ^12}{'Value (' + target_fiat + ')': ^12}{'24 hr': ^8}\n" + \
+               "\n".join(
+                   [f"{ticker: ^10}{value[0]: >12}{value[1]: >12.2f}{100 * self.determine_change(value) - 100: >8.2f}%" for
+                    ticker, value in
+                    calculated.items()]) + \
+               f"\n{'-' * 43}" + \
+               f"\n{'Total value': <18}{sum([x[0] for x in values.values()]): >16.2f}"
 
         quote_symbol = "'"
         quote_symbol_s = "'s"
@@ -171,10 +181,12 @@ class Crypto(commands.Cog, name="Crypto"):
         pass
 
     async def generate_portfolio_embed(self, ctx: commands.Context, portfolio: dict) -> discord.Embed:
-        # return await self.generate_mobile_embed(ctx,
-        #                                         portfolio) if ctx.author.is_on_mobile() else await self.generate_desktop_embed(
+        # return await self.generate_mobile_embed(ctx, portfolio) if ctx.author.is_on_mobile() else await self.generate_desktop_embed(
         #     ctx, portfolio)
         return await self.generate_mobile_embed(ctx, portfolio)
+
+    def determine_change(self, values: List):
+        return values[1] / values[0] / values[2]
 
 
 def setup(bot):

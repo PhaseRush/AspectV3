@@ -44,7 +44,11 @@ def merge_dicts(d1, d2):
     dd = defaultdict(list)
     for d in (d1, d2):
         for k, v in d.items():
-            dd[k].append(v)
+            if type(v) is tuple:
+                dd[k].append(v[0])
+                dd[k].append(float(v[1]))
+            else:
+                dd[k].append(v)
 
     return dd
 
