@@ -29,13 +29,13 @@ class Games(commands.Cog, name="Games"):
             await ctx.send("Invalid input! Try something like `3d20`")
 
     @commands.command(aliases=["randchamps", "champs"])
-    async def random_champ(self, ctx: commands.Context, num_pics: int = 1):
+    async def random_champ(self, ctx: commands.Context, num_champs: int = 1):
         with open("./data/league_champions.json", encoding='UTF-8') as f:
             champion_json = json.load(f)
         champions = list(champion_json['data'].keys())
         random.shuffle(champions)
         newline = "\n"
-        await ctx.send(f'{newline.join(champions[:num_pics])}')
+        await ctx.send(f'{newline.join(champions[:num_champs])}')
 
 
 def setup(bot):
