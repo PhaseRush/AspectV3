@@ -60,7 +60,7 @@ class Crypto(commands.Cog, name="Crypto"):
         common_currency = "USD" if "USD" not in {origin, target} else "CAD"
         try:
             ticker = self.kraken.fetch_ticker(f"{origin}/{target}")
-            price = (ticker['close'], ticker['info']['l'][1])
+            price = (ticker['close'], float(ticker['info']['l'][1]))
         except BadSymbol:
             # attempt to fix invalid ticker
             try:
@@ -97,7 +97,8 @@ class Crypto(commands.Cog, name="Crypto"):
         ticker = ticker.upper()
         (origin, target) = ticker.split("/")
         try:
-            await ctx.send(f"{ticker}:\t{'{:.5f}'.format(self.get_price(origin, target))}")
+            price, last_24 = self.get_price(origin, target)
+            await ctx.send(f"{ticker}:\t{price: .2f}\n24 Hr {100 * price/last_24 - 100 : .2}%")
         except Exception as e:
             await ctx.send(str(e))
 
@@ -159,7 +160,8 @@ class Crypto(commands.Cog, name="Crypto"):
         calculated = Utils.merge_dicts(portfolio, values)
         desc = f"{'Currency': <12}{'Quantity': ^12}{'Value (' + target_fiat + ')': ^12}{'24 hr': ^8}\n" + \
                "\n".join(
-                   [f"{ticker: ^10}{value[0]: >12}{value[1]: >12.2f}{100 * self.determine_change(value) - 100: >8.2f}%" for
+                   [f"{ticker: ^10}{value[0]: >12}{value[1]: >12.2f}{100 * self.determine_change(value) - 100: >8.2f}%"
+                    for
                     ticker, value in
                     calculated.items()]) + \
                f"\n{'-' * 43}" + \
