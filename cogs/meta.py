@@ -79,8 +79,8 @@ class MetaCog(commands.Cog, name="Meta"):
         if pull_result == "Already up to date.\n":
             await ctx.send("Nothing to update, " + pull_result)
             return
-        subprocess.run(["python", "Aspect.py"])
         await ctx.send("Reloading ...")
+        subprocess.run(["python", "Aspect.py"])
         sys.exit(3)
 
 
