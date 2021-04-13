@@ -77,7 +77,7 @@ class MetaCog(commands.Cog, name="Meta"):
     async def reload(self, ctx):
         subprocess.run(["git fetch", "git pull", "python Aspect.py"])
         await ctx.send("Reloading...")
-        sys.exit(9001)
+        sys.exit(2)
 
 
 def setup(bot):
