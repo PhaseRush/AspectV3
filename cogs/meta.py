@@ -1,3 +1,5 @@
+import importlib
+import sys
 import uuid
 from math import sqrt
 from statistics import fmean, pstdev
@@ -7,6 +9,8 @@ import discord
 from discord.ext import commands
 import datetime
 import asyncio
+
+import subprocess
 
 from Utils import timeit
 
@@ -68,6 +72,12 @@ class MetaCog(commands.Cog, name="Meta"):
     @commands.is_owner()
     async def eval(self, ctx, expr):
         await ctx.send(eval(expr))
+
+    @commands.command()
+    async def reload(self, ctx):
+        subprocess.run(["git fetch", "git pull", "python Aspect.py"])
+        await ctx.send("Reloading...")
+        sys.exit(9001)
 
 
 def setup(bot):
