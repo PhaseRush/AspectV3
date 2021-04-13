@@ -81,7 +81,7 @@ class MetaCog(commands.Cog, name="Meta"):
             return
         subprocess.run(["python", "Aspect.py"])
         await ctx.send("Reloading ...")
-        sys.exit(2)
+        sys.exit(3)
 
 
 def setup(bot):
