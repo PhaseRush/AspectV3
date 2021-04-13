@@ -73,7 +73,7 @@ class MetaCog(commands.Cog, name="Meta"):
     async def eval(self, ctx, expr):
         await ctx.send(eval(expr))
 
-    # @commands.is_owner()
+    @commands.is_owner()
     @commands.command(aliases=["reboot", "gitpull"])
     async def reload(self, ctx):
         pull_result = subprocess.run(["git", "pull"], stdout=subprocess.PIPE, text=True).stdout
