@@ -75,8 +75,10 @@ class MetaCog(commands.Cog, name="Meta"):
 
     @commands.command()
     async def reload(self, ctx):
-        pull_result = subprocess.run(["git", "pull"], stdout=subprocess.PIPE, text=True)
-        # subprocess.run(["git"], stdout=subprocess.PIPE, text=True, input="fetch")
+        pull_result = subprocess.run(["git", "pull"], stdout=subprocess.PIPE, text=True).stdout
+        if pull_result == "Already up to date.\n":
+            await ctx.send("Nothing to update, " + pull_result)
+            return
         print(pull_result)
         await ctx.send(pull_result)
         sys.exit(2)
