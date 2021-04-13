@@ -77,6 +77,7 @@ class MetaCog(commands.Cog, name="Meta"):
     async def reload(self, ctx):
         pull_result = subprocess.run(["git"], stdout=subprocess.PIPE, text=True, input="pull")
         # subprocess.run(["git"], stdout=subprocess.PIPE, text=True, input="fetch")
+        print(pull_result)
         await ctx.send(pull_result)
         sys.exit(2)
 
