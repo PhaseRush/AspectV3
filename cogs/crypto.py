@@ -98,7 +98,7 @@ class Crypto(commands.Cog, name="Crypto"):
         (origin, target) = ticker.split("/")
         try:
             price, last_24 = self.get_price(origin, target)
-            await ctx.send(f"{ticker}:\t{price: .2f}\n24 Hr {100 * price/last_24 - 100 : .2}%")
+            await ctx.send(f"{ticker}:\t{price: .2f}\n24 Hr {100 * price/last_24 - 100 : .2f}%")
         except Exception as e:
             await ctx.send(str(e))
 
