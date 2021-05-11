@@ -58,7 +58,6 @@ class Crypto(commands.Cog, name="Crypto"):
                     ethermine_json = await ethermine.json()
                     worker_names = [item['worker'] for item in ethermine_json['data']['workers']]
                     missing_workers = [x for x in val['expected_miners'] if x not in worker_names]
-                    print(missing_workers)
                     if len(missing_workers):
                         if time.time() - self.last_alerted.get(address, 0) > val['alert_freq_sec']:
                             self.last_alerted[address] = time.time()
