@@ -2,8 +2,6 @@ import datetime
 import json
 import random
 import re
-import sched
-import time
 from typing import List
 
 import urllib.request
@@ -11,7 +9,7 @@ import urllib.request
 import ccxt
 import discord
 from ccxt.base.errors import BadSymbol, RateLimitExceeded
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 import Utils
 from config import KRAKEN_API_KEY, KRAKEN_API_PRIVATE_KEY
@@ -46,24 +44,25 @@ class Crypto(commands.Cog, name="Crypto"):
         with open('./data/miner_alerts.json') as f:
             self.miner_alerts = json.load(f)
 
-        self.sched = sched.scheduler(time.time, time.sleep)
-        scope = self
+    @tasks.loop(seconds=2.0)
+    async def miner_check(self):
+        print("running miner check")
+        local_cache = {}  # could be smart with requests but who really cares
+        for address, val in self.miner_alerts.items():
+            with urllib.request.urlopen(
+                    f"https://api.ethermine.org/miner/:{address}/dashboard") as ethermine:
+                ethermine_json = json.loads(ethermine.read().decode())
+                worker_names = [item.worker for item in ethermine_json.data.workers]
+                missing_workers = [x for x in val.expected_miners if x not in worker_names]
+                print(missing_workers)
+                if len(missing_workers):
+                    for channel in [self.bot.get_channel(channel_id=x) for x in val.channels]:
+                        await channel.send(f"<@{val.discord_user_id}> {','.join(missing_workers)} is down!")
 
-        async def miner_check(scheduler):
-            print("running miner check")
-            local_cache = {}  # could be smart with requests but who really cares
-            for address, val in scope.miner_alerts.items():
-                with urllib.request.urlopen(
-                        f"https://api.ethermine.org/miner/:{address}/dashboard") as ethermine:
-                    ethermine_json = json.loads(ethermine.read().decode())
-                    worker_names = [item.worker for item in ethermine_json.data.workers]
-                    missing_workers = [x for x in val.expected_miners if x not in worker_names]
-                    if len(missing_workers):
-                        for channel in [scope.bot.get_channel(channel_id=x) for x in val.channels]:
-                            await channel.send(f"<@{val.discord_user_id}> {','.join(missing_workers)} is down!")
-
-        self.sched.enter(0, 60, miner_check, (self.sched,))
-        self.sched.run()
+    @miner_check.before_loop
+    async def before_ready(self):
+        print("before loop")
+        await self.bot.wait_until_ready()
 
     def get_price(self, origin: str, target: str) -> (float, float):
         if origin == target:
