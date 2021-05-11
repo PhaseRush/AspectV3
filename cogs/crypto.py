@@ -63,7 +63,8 @@ class Crypto(commands.Cog, name="Crypto"):
                         if time.time() - self.last_alerted.get(address) > 60 * 60:
                             self.last_alerted[address] = time.time()
                             for channel in [self.bot.get_channel(channel_id) for channel_id in val['channels']]:
-                                await channel.send(f"<@{val['discord_user_id']}> {','.join(missing_workers)} is down!")
+                                await channel.send(f"<@{val['discord_user_id']}> {','.join(missing_workers)} is down!"
+                                                   f"https://ethermine.org/miners/{address}/dashboard")
 
     @miner_check.before_loop
     async def before_ready(self):
