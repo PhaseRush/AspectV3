@@ -6,6 +6,7 @@ from typing import List
 
 import urllib.request
 
+import aiohttp
 import ccxt
 import discord
 from ccxt.base.errors import BadSymbol, RateLimitExceeded
@@ -44,24 +45,30 @@ class Crypto(commands.Cog, name="Crypto"):
         with open('./data/miner_alerts.json') as f:
             self.miner_alerts = json.load(f)
 
-    @tasks.loop(seconds=2.0)
+        self.miner_check.start()
+
+    @tasks.loop(seconds=5.0)
     async def miner_check(self):
         print("running miner check")
         local_cache = {}  # could be smart with requests but who really cares
-        for address, val in self.miner_alerts.items():
-            with urllib.request.urlopen(
-                    f"https://api.ethermine.org/miner/:{address}/dashboard") as ethermine:
-                ethermine_json = json.loads(ethermine.read().decode())
-                worker_names = [item.worker for item in ethermine_json.data.workers]
-                missing_workers = [x for x in val.expected_miners if x not in worker_names]
-                print(missing_workers)
-                if len(missing_workers):
-                    for channel in [self.bot.get_channel(channel_id=x) for x in val.channels]:
+        async with aiohttp.ClientSession() as cs:
+            print("in first async")
+            for address, val in self.miner_alerts.items():
+                print(address)
+                async with cs.get(f"https://api.ethermine.org/miner/:{address}/dashboard") as ethermine:
+                    ethermine_json = await ethermine.json()
+                    worker_names = [item['worker'] for item in ethermine_json['data']['workers']]
+                    missing_workers = [x for x in val['expected_miners'] if x not in worker_names]
+                    print(missing_workers)
+                    if len(missing_workers):
+                        print(val['channels'][0])
+                        # for channel in [self.bot.get_channel(channel_id=x) for x in val['channels']]:
+                        channel = self.bot.get_channel(val['channels'][0])
+                        print(channel)
                         await channel.send(f"<@{val.discord_user_id}> {','.join(missing_workers)} is down!")
 
     @miner_check.before_loop
     async def before_ready(self):
-        print("before loop")
         await self.bot.wait_until_ready()
 
     def get_price(self, origin: str, target: str) -> (float, float):

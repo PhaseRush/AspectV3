@@ -1,4 +1,4 @@
-./data/crypto_profiles.json
+./data/*
 ./config.py
 
 # idea/pycharm things
