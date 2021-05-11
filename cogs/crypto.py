@@ -50,7 +50,7 @@ class Crypto(commands.Cog, name="Crypto"):
         self.last_alerted = {}
         self.miner_check.start()
 
-    @tasks.loop(seconds=60.0)
+    @tasks.loop(seconds=10.0)
     async def miner_check(self):
         async with aiohttp.ClientSession() as cs:
             for address, val in self.miner_alerts.items():
@@ -60,10 +60,10 @@ class Crypto(commands.Cog, name="Crypto"):
                     missing_workers = [x for x in val['expected_miners'] if x not in worker_names]
                     print(missing_workers)
                     if len(missing_workers):
-                        if time.time() - self.last_alerted.get(address, 0) > 60 * 60:
+                        if time.time() - self.last_alerted.get(address, 0) > val['alert_freq_sec']:
                             self.last_alerted[address] = time.time()
                             for channel in [self.bot.get_channel(channel_id) for channel_id in val['channels']]:
-                                await channel.send(f"<@{val['discord_user_id']}> {','.join(missing_workers)} is down!"
+                                await channel.send(f"<@{val['discord_user_id']}> {','.join(missing_workers)} is down!\n"
                                                    f"https://ethermine.org/miners/{address}/dashboard")
 
     @miner_check.before_loop
