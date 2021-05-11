@@ -2,7 +2,11 @@ import datetime
 import json
 import random
 import re
+import sched
+import time
 from typing import List
+
+import urllib.request
 
 import ccxt
 import discord
@@ -38,6 +42,28 @@ class Crypto(commands.Cog, name="Crypto"):
             'secret': KRAKEN_API_PRIVATE_KEY,
         })
         # print("ETH/CAD", json.dumps(self.kraken.fetch_ticker("ETH/CAD")["close"], indent=1))
+
+        with open('./data/miner_alerts.json') as f:
+            self.miner_alerts = json.load(f)
+
+        self.sched = sched.scheduler(time.time, time.sleep)
+        scope = self
+
+        async def miner_check(scheduler):
+            print("running miner check")
+            local_cache = {}  # could be smart with requests but who really cares
+            for address, val in scope.miner_alerts.items():
+                with urllib.request.urlopen(
+                        f"https://api.ethermine.org/miner/:{address}/dashboard") as ethermine:
+                    ethermine_json = json.loads(ethermine.read().decode())
+                    worker_names = [item.worker for item in ethermine_json.data.workers]
+                    missing_workers = [x for x in val.expected_miners if x not in worker_names]
+                    if len(missing_workers):
+                        for channel in [scope.bot.get_channel(channel_id=x) for x in val.channels]:
+                            await channel.send(f"<@{val.discord_user_id}> {','.join(missing_workers)} is down!")
+
+        self.sched.enter(0, 60, miner_check, (self.sched,))
+        self.sched.run()
 
     def get_price(self, origin: str, target: str) -> (float, float):
         if origin == target:
@@ -98,7 +124,7 @@ class Crypto(commands.Cog, name="Crypto"):
         (origin, target) = ticker.split("/")
         try:
             price, last_24 = self.get_price(origin, target)
-            await ctx.send(f"{ticker}:\t{price: .2f}\n24 Hr {100 * price/last_24 - 100 : .2f}%")
+            await ctx.send(f"{ticker}:\t{price: .2f}\n24 Hr {100 * price / last_24 - 100 : .2f}%")
         except Exception as e:
             await ctx.send(str(e))
 
