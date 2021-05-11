@@ -47,7 +47,7 @@ class Crypto(commands.Cog, name="Crypto"):
         with open('./data/miner_alerts.json') as f:
             self.miner_alerts = json.load(f)
 
-        self.last_alerted = defaultdict(float)
+        self.last_alerted = {}
         self.miner_check.start()
 
     @tasks.loop(seconds=60.0)
@@ -60,7 +60,7 @@ class Crypto(commands.Cog, name="Crypto"):
                     missing_workers = [x for x in val['expected_miners'] if x not in worker_names]
                     print(missing_workers)
                     if len(missing_workers):
-                        if time.time() - self.last_alerted.get(address) > 60 * 60:
+                        if time.time() - self.last_alerted.get(address, 0) > 60 * 60:
                             self.last_alerted[address] = time.time()
                             for channel in [self.bot.get_channel(channel_id) for channel_id in val['channels']]:
                                 await channel.send(f"<@{val['discord_user_id']}> {','.join(missing_workers)} is down!"
