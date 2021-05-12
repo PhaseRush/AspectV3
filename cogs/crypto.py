@@ -50,14 +50,17 @@ class Crypto(commands.Cog, name="Crypto"):
         self.last_alerted = {}
         self.miner_check.start()
 
-    @tasks.loop(seconds=10.0)
+    @tasks.loop(seconds=20.0)
     async def miner_check(self):
         async with aiohttp.ClientSession() as cs:
             for address, val in self.miner_alerts.items():
                 async with cs.get(f"https://api.ethermine.org/miner/:{address}/dashboard") as ethermine:
                     ethermine_json = await ethermine.json()
-                    worker_names = [item['worker'] for item in ethermine_json['data']['workers']]
-                    missing_workers = [x for x in val['expected_miners'] if x not in worker_names]
+                    current_workers = {(item['worker'], item['lastSeen']) for item in ethermine_json['data']['workers']}
+                    missing_workers = []
+                    for name, last_seen in current_workers:
+                        if name not in val['expected_miners'] or time.time() - last_seen > 20 * 60:
+                            missing_workers.append(name)
                     if len(missing_workers):
                         if time.time() - self.last_alerted.get(address, 0) > val['alert_freq_sec']:
                             self.last_alerted[address] = time.time()
