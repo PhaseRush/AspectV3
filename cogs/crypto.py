@@ -4,9 +4,12 @@ import random
 import re
 import time
 from collections import defaultdict
-from typing import List
+from typing import List, Optional
+from types import SimpleNamespace as Namespace
+import copy
 
 import urllib.request
+from tabulate import tabulate
 
 import aiohttp
 import ccxt
@@ -51,7 +54,10 @@ class Crypto(commands.Cog, name="Crypto"):
         self.miner_ignore = {}
         self.miner_check.start()
 
-    @tasks.loop(seconds=20.0)
+        with open('./data/ethermine_addresses.json') as f:
+            self.ethermine_addresses = json.load(f)
+
+    @tasks.loop(seconds=30.0)
     async def miner_check(self):
         async with aiohttp.ClientSession() as cs:
             for address, val in self.miner_alerts.items():
@@ -61,7 +67,7 @@ class Crypto(commands.Cog, name="Crypto"):
                     missing_workers = []
                     for name, last_seen in current_workers:
                         if name not in self.miner_ignore.get(val['discord_user_id'], []):
-                            if name not in val['expected_miners'] or time.time() - last_seen > 20 * 60:
+                            if name not in val['expected_miners'] or time.time() - last_seen > 30 * 60:
                                 missing_workers.append(name)
                     if len(missing_workers):
                         if time.time() - self.last_alerted.get(address, 0) > val['alert_freq_sec']:
@@ -82,6 +88,57 @@ class Crypto(commands.Cog, name="Crypto"):
         else:
             self.miner_ignore.get(ctx.author.id).append(miner_name)
             await ctx.send(f"Added {miner_name} to ignore list")
+
+    @commands.command(aliases=["minerstat"])
+    async def mining_statistics(self, ctx: commands.Context, selector: Optional[str]):
+        cumulative_data = None
+        data_entries = []
+        addresses_to_merge = None
+        async with aiohttp.ClientSession() as cs:
+            if selector is None or selector == "":
+                addresses_to_merge = [self.ethermine_addresses.get(selector,
+                                                                   self.ethermine_addresses.get(
+                                                                       "264213620026638336"))]
+            elif selector in {"all", "acc", "total"}:
+                addresses_to_merge = self.ethermine_addresses.values()
+
+            for addr in addresses_to_merge:
+                async with cs.get(f"https://api.ethermine.org/miner/:{addr}/currentStats") as ethermine:
+                    ethermine_json = json.dumps(await ethermine.json())
+                    curr_data = json.loads(ethermine_json, object_hook=lambda d: Namespace(**d)).data
+                    curr_data.addr = addr
+                    if cumulative_data is None:
+                        cumulative_data = curr_data
+                        data_entries.append(copy.deepcopy(curr_data))
+                    else:
+                        cumulative_data.reportedHashrate += curr_data.reportedHashrate
+                        cumulative_data.currentHashrate += curr_data.currentHashrate
+                        cumulative_data.averageHashrate += curr_data.averageHashrate
+                        cumulative_data.unpaid += curr_data.unpaid
+                        cumulative_data.usdPerMin += curr_data.usdPerMin
+                        data_entries.append(curr_data)
+
+        headers = ["Wallet", "Avg. HR", "USD/Day"]
+        table = []
+
+        for data in data_entries:
+            table.append([f"{data.addr[:6]}...{data.addr[-4:]}",
+                          round(data.averageHashrate / 1e6, 2),
+                          round(data.usdPerMin * 60 * 24, 2)])
+
+        if len(data_entries) > 1:
+            table.append([f"Cumulative", round(cumulative_data.averageHashrate / 1e6, 2),
+                          round(cumulative_data.usdPerMin * 60 * 24, 2)])
+
+        desc = tabulate(table, headers=headers)
+
+        embed: discord.Embed = discord.Embed(
+            title=f"Ethermine report",
+            description=f"```{desc}```",
+            timestamp=datetime.datetime.utcnow(),
+            colour=ctx.author.colour
+        )
+        await ctx.send(embed=embed)
 
     def get_price(self, origin: str, target: str) -> (float, float):
         if origin == target:
