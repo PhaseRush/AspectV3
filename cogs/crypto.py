@@ -96,7 +96,7 @@ class Crypto(commands.Cog, name="Crypto"):
         addresses_to_merge = None
         async with aiohttp.ClientSession() as cs:
             if selector is None or selector == "":
-                addresses_to_merge = [self.ethermine_addresses.get(selector,
+                addresses_to_merge = [self.ethermine_addresses.get(str(ctx.author.id),
                                                                    self.ethermine_addresses.get(
                                                                        "264213620026638336"))]
             elif selector in {"all", "acc", "total"}:
