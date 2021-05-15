@@ -116,7 +116,7 @@ class Crypto(commands.Cog, name="Crypto"):
                         cumulative_data.averageHashrate += curr_data.averageHashrate
                         cumulative_data.unpaid += curr_data.unpaid
                         cumulative_data.usdPerMin += curr_data.usdPerMin
-                        data_entries.append(curr_data)
+                        data_entries.append(copy.deepcopy(curr_data))
 
         headers = ["Wallet", "Avg. HR", "USD/Day"]
         table = []
