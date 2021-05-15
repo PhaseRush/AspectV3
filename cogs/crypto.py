@@ -48,6 +48,7 @@ class Crypto(commands.Cog, name="Crypto"):
             self.miner_alerts = json.load(f)
 
         self.last_alerted = {}
+        self.miner_ignore = {}
         self.miner_check.start()
 
     @tasks.loop(seconds=20.0)
@@ -59,8 +60,9 @@ class Crypto(commands.Cog, name="Crypto"):
                     current_workers = {(item['worker'], item['lastSeen']) for item in ethermine_json['data']['workers']}
                     missing_workers = []
                     for name, last_seen in current_workers:
-                        if name not in val['expected_miners'] or time.time() - last_seen > 20 * 60:
-                            missing_workers.append(name)
+                        if name not in self.miner_ignore.get(val['discord_user_id'], []):
+                            if name not in val['expected_miners'] or time.time() - last_seen > 20 * 60:
+                                missing_workers.append(name)
                     if len(missing_workers):
                         if time.time() - self.last_alerted.get(address, 0) > val['alert_freq_sec']:
                             self.last_alerted[address] = time.time()
@@ -71,6 +73,15 @@ class Crypto(commands.Cog, name="Crypto"):
     @miner_check.before_loop
     async def before_ready(self):
         await self.bot.wait_until_ready()
+
+    @commands.command(aliases=["ignore"])
+    async def mute_miner_alert(self, ctx, miner_name):
+        if miner_name in self.miner_ignore.get(ctx.author.id, []):
+            self.miner_ignore.get(ctx.author.id).remove(miner_name)
+            await ctx.send(f"Removed {miner_name} from ignore list.")
+        else:
+            self.miner_ignore.get(ctx.author.id).append(miner_name)
+            await ctx.send(f"Added {miner_name} to ignore list")
 
     def get_price(self, origin: str, target: str) -> (float, float):
         if origin == target:
