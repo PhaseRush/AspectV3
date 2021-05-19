@@ -84,6 +84,12 @@ class MetaCog(commands.Cog, name="Meta"):
         subprocess.run(["python", "Aspect.py"])
         sys.exit(4)
 
+    @commands.is_owner()
+    @commands.command()
+    async def git(self, ctx: commands.Context, sub_cmd: str = "status"):
+        command_result = subprocess.run(["git", sub_cmd], stdout=subprocess.PIPE, text=True).stdout
+        await ctx.send(command_result)
+
 
 def setup(bot):
     bot.add_cog(MetaCog(bot))
