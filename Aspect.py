@@ -12,8 +12,15 @@ from time import perf_counter
 from cogs.reddit import SubredditLinker
 from config import DISCORD_TOKEN
 
-bot = commands.Bot(command_prefix='$', description="actually put something useful here eventually...",
-                   activity=discord.Activity(type=discord.ActivityType.watching, name="ETH go to the moon"))
+
+class Aspect(commands.Bot):
+    def __init__(self):
+        super().__init__(command_prefix='$', description="actually put something useful here eventually...",
+                         activity=discord.Activity(type=discord.ActivityType.watching, name="ETH go to the moon"))
+        self.start_time = datetime.utcnow()
+
+
+bot = Aspect()
 
 
 @bot.event
@@ -39,5 +46,4 @@ extensions = ['cogs.' + filename[:-3] for filename in os.listdir("./cogs") if fi
 
 print(f"Successfully loaded {sum([load_cog(ext) for ext in extensions])} out of {len(extensions)} extensions")
 
-start_time = datetime.utcnow()
 bot.run(DISCORD_TOKEN)

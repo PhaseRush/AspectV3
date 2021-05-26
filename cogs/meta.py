@@ -9,14 +9,15 @@ from typing import List
 import discord
 from discord.ext import commands
 import datetime
+import time
 import asyncio
+import copy
 
 import inspect
 
 import subprocess
 
 from Utils import timeit
-from Aspect import start_time
 
 
 def get_stats(ping_list: List[float]) -> (float, float):
@@ -34,6 +35,23 @@ async def find_ping(ctx: commands.Context, latest_msg: discord.Message) -> (floa
     api_ping = api_ping_diff.total_seconds() * 1000
     websocket_latency = ctx.bot.latency * 1000
     return websocket_latency, gateway_ping, api_ping
+
+
+async def copy_context(src_ctx: commands.Context, *, author=None, channel=None, **kwargs):
+    """
+    Makes a new :class:`Context` with changed message properties.
+    """
+    # copy the message and update the attributes
+    alt_message: discord.Message = copy.copy(src_ctx.message)
+    alt_message._update(kwargs)
+
+    if author is not None:
+        alt_message.author = author
+    if channel is not None:
+        alt_message.channel = channel
+
+    # obtain and return a context of the same type
+    return await src_ctx.bot.get_context(alt_message, cls=type(src_ctx))
 
 
 class MetaCog(commands.Cog, name="Meta"):
@@ -78,15 +96,9 @@ class MetaCog(commands.Cog, name="Meta"):
         await ctx.send(eval(expr))
 
     @commands.is_owner()
-    @commands.command(aliases=["reboot", "gitpull"])
-    async def reload(self, ctx):
-        pull_result = subprocess.run(["git", "pull"], stdout=subprocess.PIPE, text=True).stdout
-        if pull_result == "Already up to date.\n":
-            await ctx.send("Nothing to update, " + pull_result)
-            return
-        await ctx.send("Reloading ...")
-        subprocess.run(["python", "Aspect.py"])
-        sys.exit(4)
+    @commands.command(aliases=["restart"])
+    async def reboot(self, ctx: commands.Context):
+        os.execv(sys.executable, ['python'] + sys.argv)
 
     @commands.is_owner()
     @commands.command()
@@ -134,7 +146,21 @@ class MetaCog(commands.Cog, name="Meta"):
 
     @commands.command()
     async def uptime(self, ctx: commands.Context):
-        await ctx.send(f"Bot has been online since {start_time}\nUptime:{str(datetime.datetime.utcnow() - start_time)}")
+        await ctx.send(
+            f"Bot has been online since {self.bot.start_time}\nUptime:\t{str(datetime.datetime.utcnow() - self.bot.start_time)}")
+
+    # thanks willy again :)
+    @commands.command()
+    async def time(self, ctx: commands.Context, *, command_string: str):
+        alt_ctx = await copy_context(ctx, content=ctx.prefix + command_string)
+        if alt_ctx.command is None:
+            return await ctx.send(f'Command "{alt_ctx.invoked_with}" is not found')
+
+        start = time.perf_counter()
+        await alt_ctx.command.invoke(alt_ctx)
+        end = time.perf_counter()
+
+        return await ctx.send(f'Command `{alt_ctx.command.qualified_name}` finished in {end - start:.3f}s.')
 
 
 def setup(bot):
