@@ -88,7 +88,10 @@ class MetaCog(commands.Cog, name="Meta"):
     @commands.command()
     async def git(self, ctx: commands.Context, sub_cmd: str = "status"):
         command_result = subprocess.run(["git", sub_cmd], stdout=subprocess.PIPE, text=True).stdout
-        await ctx.send(command_result)
+        if command_result == "":
+            await ctx.send("*no output*")
+        else:
+            await ctx.send(command_result)
 
 
 def setup(bot):
