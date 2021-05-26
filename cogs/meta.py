@@ -108,7 +108,8 @@ class MetaCog(commands.Cog, name="Meta"):
     @commands.is_owner()
     @commands.command()
     async def git(self, ctx: commands.Context, *sub_cmd: str):
-        command_result = subprocess.run(["git"] + list(sub_cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        command_result = subprocess.run(["git"] + list(sub_cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                        text=True)
         stdout = command_result.stdout
         stderr = command_result.stderr  # did yall know that `git fetch` outputs only to stderr? https://github.com/git/git/blob/bf949ade81106fbda068c1fdb2c6fd1cb1babe7e/builtin/fetch.c
         msg: str = "```No output```"
@@ -139,7 +140,12 @@ class MetaCog(commands.Cog, name="Meta"):
         periods or space eg. highlight.mention or highlight mention
         """
         url = 'https://github.com/Phaserush/Aspectv3'
-        branch = 'master'
+        try:
+            git_branch_stdout = subprocess.run(["git", "branch"], stdout=subprocess.PIPE, text=True).stdout.split("\n")
+            branch = [branch for branch in git_branch_stdout if "* " in branch][0][2:]
+        except Exception:
+            branch = "master"
+
         if command is None:
             return await ctx.send(url)
 
