@@ -97,7 +97,9 @@ class MetaCog(commands.Cog, name="Meta"):
 
     @commands.is_owner()
     @commands.command(aliases=["restart"])
-    async def reboot(self, ctx: commands.Context):
+    async def reboot(self, ctx: commands.Context, options: str = None):
+        if options in {"update", "git pull"}:
+            await self.git(ctx, "pull")
         os.execv(sys.executable, ['python'] + sys.argv)
 
     @commands.is_owner()
