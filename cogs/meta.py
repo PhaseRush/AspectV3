@@ -143,6 +143,7 @@ class MetaCog(commands.Cog, name="Meta"):
         try:
             git_branch_stdout = subprocess.run(["git", "branch"], stdout=subprocess.PIPE, text=True).stdout.split("\n")
             branch = [branch for branch in git_branch_stdout if "* " in branch][0][2:]
+            print(branch)
         except Exception:
             branch = "master"
 
