@@ -184,6 +184,8 @@ class MetaCog(commands.Cog, name="Meta"):
         alt_ctx = await copy_context(ctx, content=ctx.prefix + command_string)
         if alt_ctx.command is None:
             return await ctx.send(f'Command "{alt_ctx.invoked_with}" is not found')
+        elif alt_ctx.command.qualified_name == 'time':
+            return await ctx.send(f"no")
 
         start = time.perf_counter()
         await alt_ctx.command.invoke(alt_ctx)
