@@ -104,8 +104,8 @@ class MetaCog(commands.Cog, name="Meta"):
 
     @commands.is_owner()
     @commands.command()
-    async def git(self, ctx: commands.Context, sub_cmd: str = "status"):
-        command_result = subprocess.run(["git", sub_cmd], stdout=subprocess.PIPE, text=True)
+    async def git(self, ctx: commands.Context, *sub_cmd: str):
+        command_result = subprocess.run(["git"] + list(sub_cmd), stdout=subprocess.PIPE, text=True)
         stdout = command_result.stdout or "None"
         stderr = command_result.stderr or "None"  # did yall know that `git fetch` outputs only to stderr? https://github.com/git/git/blob/bf949ade81106fbda068c1fdb2c6fd1cb1babe7e/builtin/fetch.c
         if stdout == "" and stderr == "":
