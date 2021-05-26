@@ -106,12 +106,17 @@ class MetaCog(commands.Cog, name="Meta"):
     @commands.command()
     async def git(self, ctx: commands.Context, *sub_cmd: str):
         command_result = subprocess.run(["git"] + list(sub_cmd), stdout=subprocess.PIPE, text=True)
-        stdout = command_result.stdout or "None"
-        stderr = command_result.stderr or "None"  # did yall know that `git fetch` outputs only to stderr? https://github.com/git/git/blob/bf949ade81106fbda068c1fdb2c6fd1cb1babe7e/builtin/fetch.c
+        stdout = command_result.stdout
+        stderr = command_result.stderr  # did yall know that `git fetch` outputs only to stderr? https://github.com/git/git/blob/bf949ade81106fbda068c1fdb2c6fd1cb1babe7e/builtin/fetch.c
+        msg: str = ""
         if stdout == "" and stderr == "":
-            await ctx.send("*no output*")
-        else:
-            await ctx.send(f"stdout:```\n{stdout}```\nstderr:```\n{stderr}```")
+            msg += "```No output```"
+        elif stdout:
+            msg += f"stdout:```\n{stdout}```\n"
+        elif stderr:
+            msg += f"stderr:```\n{stderr}```"
+
+        await ctx.send(msg)
 
     # thanks willy :)
     @commands.command()
