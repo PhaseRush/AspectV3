@@ -18,7 +18,7 @@ import re
 
 import subprocess
 
-from Utils import timeit
+from Utils import timeit, escape_md
 
 
 def get_stats(ping_list: List[float]) -> (float, float):
@@ -58,9 +58,6 @@ async def copy_context(src_ctx: commands.Context, *, author=None, channel=None, 
 class MetaCog(commands.Cog, name="Meta"):
     def __init__(self, bot):
         self.bot = bot
-        self.markdown_pattern = re.compile(r"([*_`~\\])")
-        self.triple_backtick_pattern = re.compile(
-            r"(``)`")  # Discord does not support sending triple backticks in a code block.
 
     @commands.command()
     async def hello(self, ctx: commands.Context):
@@ -116,9 +113,9 @@ class MetaCog(commands.Cog, name="Meta"):
         if stdout == "" and stderr == "":
             msg += "```No output```"
         elif stdout:
-            msg += f"stdout:```\n{stdout}```\n"
+            msg += f"stdout:```\n{escape_md(stdout)}```\n"
         elif stderr:
-            msg += f"stderr:```\n{stderr}```"
+            msg += f"stderr:```\n{escape_md(stderr)}```"
 
         await ctx.send(msg or "*No output*")
 
@@ -155,15 +152,8 @@ class MetaCog(commands.Cog, name="Meta"):
             url = 'https://github.com/Rapptz/discord.py'
 
         final_url = f'<{url}/blob/{branch}/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}>'
-
-        group1: str = r"\1"
-        group2: str = r"\1 `"
-        escaped = re.sub(self.markdown_pattern, group1, ''.join(lines))
-        if self.triple_backtick_pattern.search(escaped):
-            escaped = re.sub(self.triple_backtick_pattern, group2, escaped)
-            escaped += "\n\t#Note: a triple backtick was found in the source code. Please refer to the github link for the most accurate source."
         await ctx.send(f"{final_url}\n```py\n"
-                       f"{escaped}```")
+                       f"{escape_md(''.join(lines))}```")
 
     @commands.command()
     async def uptime(self, ctx: commands.Context):

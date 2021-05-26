@@ -5,9 +5,13 @@ from gc import get_referents
 from threading import Lock, Timer
 from types import ModuleType, FunctionType
 from collections import defaultdict
+import re
 
 # https://stackoverflow.com/a/30316760/10583298
 from typing import List
+
+markdown_pattern = re.compile(r"([*_`~\\])")
+triple_backtick_pattern = re.compile(r"(``)`")  # Discord does not support sending triple backticks in a code block.
 
 
 def sizeof(obj):
@@ -39,6 +43,15 @@ def timeit(f):
 
     return timer
 
+
+def escape_md(s: str) -> str:
+    group1: str = r"\1"
+    group2: str = r"\1 `"
+    escaped = re.sub(markdown_pattern, group1, s)
+    if triple_backtick_pattern.search(escaped):
+        escaped = re.sub(triple_backtick_pattern, group2, escaped)
+        escaped += "\n\t#Note: a triple backtick was found in the source code. Please refer to the github link for the most accurate source."
+    return escaped
 
 def merge_dicts(d1, d2):
     dd = defaultdict(list)
