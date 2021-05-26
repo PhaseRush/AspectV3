@@ -1,5 +1,6 @@
 import importlib
 import sys
+import os
 import uuid
 from math import sqrt
 from statistics import fmean, pstdev
@@ -9,6 +10,8 @@ import discord
 from discord.ext import commands
 import datetime
 import asyncio
+
+import inspect
 
 import subprocess
 
@@ -92,6 +95,41 @@ class MetaCog(commands.Cog, name="Meta"):
             await ctx.send("*no output*")
         else:
             await ctx.send(command_result)
+
+    # thanks willy :)
+    @commands.command()
+    async def source(self, ctx, *, command: str = None):
+        """Displays  source code or for a specific command.
+        To display the source code of a subcommand you can separate it by
+        periods or space eg. highlight.mention or highlight mention
+        """
+        url = 'https://github.com/Phaserush/Aspectv3'
+        branch = 'master'
+        if command is None:
+            return await ctx.send(url)
+
+        if len(command.split()) == 1:
+            cmd = self.bot.get_command(command.replace('.', ' '))
+        else:
+            cmd = self.bot.get_command(command)
+
+        if cmd is None:
+            return await ctx.send('Sorry. I am unable to find that command.')
+
+        src = cmd.callback.__code__
+        module = cmd.callback.__module__
+        file = src.co_filename
+
+        lines, firstlineno = inspect.getsourcelines(src)
+        if not module.startswith('discord'):
+            # not a built-in command
+            location = os.path.relpath(file).replace('\\', '/')
+        else:
+            location = module.replace('.', '/') + '.py'
+            url = 'https://github.com/Rapptz/discord.py'
+
+        final_url = f'<{url}/blob/{branch}/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}>'
+        await ctx.send(f"{final_url}\n```py\n{''.join(lines)}\n```")
 
 
 def setup(bot):
