@@ -106,8 +106,8 @@ class MetaCog(commands.Cog, name="Meta"):
     @commands.command()
     async def git(self, ctx: commands.Context, sub_cmd: str = "status"):
         command_result = subprocess.run(["git", sub_cmd], stdout=subprocess.PIPE, text=True)
-        stdout = command_result.stdout
-        stderr = command_result.stderr
+        stdout = command_result.stdout or "None"
+        stderr = command_result.stderr or "None"
         if stdout == "" and stderr == "":
             await ctx.send("*no output*")
         else:
