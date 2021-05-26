@@ -14,6 +14,7 @@ import asyncio
 import copy
 
 import inspect
+import re
 
 import subprocess
 
@@ -57,6 +58,9 @@ async def copy_context(src_ctx: commands.Context, *, author=None, channel=None, 
 class MetaCog(commands.Cog, name="Meta"):
     def __init__(self, bot):
         self.bot = bot
+        self.markdown_pattern = re.compile(r"([*_`~\\])")
+        self.triple_backtick_pattern = re.compile(
+            r"(``)`")  # Discord does not support sending triple backticks in a code block.
 
     @commands.command()
     async def hello(self, ctx: commands.Context):
@@ -151,7 +155,15 @@ class MetaCog(commands.Cog, name="Meta"):
             url = 'https://github.com/Rapptz/discord.py'
 
         final_url = f'<{url}/blob/{branch}/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}>'
-        await ctx.send(f"{final_url}\n```py\n{''.join(lines)}\n```")
+
+        group1: str = r"\1"
+        group2: str = r"\1 `"
+        escaped = re.sub(self.markdown_pattern, group1, ''.join(lines))
+        if self.triple_backtick_pattern.search(escaped):
+            escaped = re.sub(self.triple_backtick_pattern, group2, escaped)
+            escaped += "\n\t#Note: a triple backtick was found in the source code. Please refer to the github link for the most accurate source."
+        await ctx.send(f"{final_url}\n```py\n"
+                       f"{escaped}```")
 
     @commands.command()
     async def uptime(self, ctx: commands.Context):
