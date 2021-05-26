@@ -116,7 +116,7 @@ class MetaCog(commands.Cog, name="Meta"):
         elif stderr:
             msg += f"stderr:```\n{stderr}```"
 
-        await ctx.send(msg)
+        await ctx.send(msg or "*No output*")
 
     # thanks willy :)
     @commands.command()
