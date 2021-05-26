@@ -103,6 +103,7 @@ class MetaCog(commands.Cog, name="Meta"):
     async def reboot(self, ctx: commands.Context, options: str = None):
         if options in {"update", "git pull"}:
             await self.git(ctx, "pull")
+            await ctx.send("updating...")
         os.execv(sys.executable, ['python'] + sys.argv)
 
     @commands.is_owner()
