@@ -16,6 +16,7 @@ import inspect
 import subprocess
 
 from Utils import timeit
+from Aspect import start_time
 
 
 def get_stats(ping_list: List[float]) -> (float, float):
@@ -130,6 +131,10 @@ class MetaCog(commands.Cog, name="Meta"):
 
         final_url = f'<{url}/blob/{branch}/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}>'
         await ctx.send(f"{final_url}\n```py\n{''.join(lines)}\n```")
+
+    @commands.command()
+    async def uptime(self, ctx: commands.Context):
+        await ctx.send(f"Bot has been online since {start_time}\nUptime:{str(datetime.datetime.utcnow() - start_time)}")
 
 
 def setup(bot):

@@ -39,4 +39,5 @@ extensions = ['cogs.' + filename[:-3] for filename in os.listdir("./cogs") if fi
 
 print(f"Successfully loaded {sum([load_cog(ext) for ext in extensions])} out of {len(extensions)} extensions")
 
+start_time = datetime.utcnow()
 bot.run(DISCORD_TOKEN)
