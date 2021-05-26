@@ -18,6 +18,8 @@ import re
 
 import subprocess
 
+from discord.ext.commands import CommandInvokeError
+
 from Utils import timeit, escape_md
 
 
@@ -109,15 +111,25 @@ class MetaCog(commands.Cog, name="Meta"):
         command_result = subprocess.run(["git"] + list(sub_cmd), stdout=subprocess.PIPE, text=True)
         stdout = command_result.stdout
         stderr = command_result.stderr  # did yall know that `git fetch` outputs only to stderr? https://github.com/git/git/blob/bf949ade81106fbda068c1fdb2c6fd1cb1babe7e/builtin/fetch.c
-        msg: str = ""
-        if stdout == "" and stderr == "":
-            msg += "```No output```"
+        msg: str = "```No output```"
+        if stdout and stderr:
+            if len(stdout) + len(stderr) > 1950:
+                stdout = stdout[:950] + "\n..."
+                stderr = stderr[:950] + "\n..."
+            msg = f"stdout:```\n{escape_md(stdout)}```\n" \
+                  f"stderr:```\n{escape_md(stderr)}```"
         elif stdout:
-            msg += f"stdout:```\n{escape_md(stdout)}```\n"
+            if len(stdout) > 1950:
+                stdout = stdout[1950:] + "\n..."
+            msg = f"stdout:```\n{escape_md(stdout)}```"
         elif stderr:
-            msg += f"stderr:```\n{escape_md(stderr)}```"
-
-        await ctx.send(msg or "*No output*")
+            if len(stderr) > 1950:
+                stderr = stderr[1950:] + "\n..."
+            msg = f"stderr:```\n{escape_md(stderr)}```"
+        try:
+            await ctx.send(msg or "*No output*")
+        except Exception as e:
+            await ctx.send(str(e))
 
     # thanks willy :)
     @commands.command()
