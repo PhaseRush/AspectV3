@@ -192,7 +192,7 @@ class MetaCog(commands.Cog, name="Meta"):
         await alt_ctx.command.invoke(alt_ctx)
         end = time.perf_counter()
 
-        return await ctx.send(f'Command `{alt_ctx.command.qualified_name}` finished in {end - start:.3f}s.')
+        return await ctx.send(f'`{command_string}` finished in {end - start:.3f}s.')
 
 
 def setup(bot):
