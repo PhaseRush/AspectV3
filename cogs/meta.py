@@ -1,6 +1,11 @@
-import importlib
-import sys
+import asyncio
+import copy
+import datetime
+import inspect
 import os
+import subprocess
+import sys
+import time
 import uuid
 from math import sqrt
 from statistics import fmean, pstdev
@@ -8,17 +13,6 @@ from typing import List
 
 import discord
 from discord.ext import commands
-import datetime
-import time
-import asyncio
-import copy
-
-import inspect
-import re
-
-import subprocess
-
-from discord.ext.commands import CommandInvokeError
 
 from Utils import timeit, escape_md
 
@@ -40,6 +34,7 @@ async def find_ping(ctx: commands.Context, latest_msg: discord.Message) -> (floa
     return websocket_latency, gateway_ping, api_ping
 
 
+# thanks willy :)
 async def copy_context(src_ctx: commands.Context, *, author=None, channel=None, **kwargs):
     """
     Makes a new :class:`Context` with changed message properties.
@@ -177,7 +172,8 @@ class MetaCog(commands.Cog, name="Meta"):
     @commands.command()
     async def uptime(self, ctx: commands.Context):
         await ctx.send(
-            f"Bot has been online since {self.bot.start_time}\nUptime:\t{str(datetime.datetime.utcnow() - self.bot.start_time)}")
+            f"Bot has been online since {self.bot.start_time}\n"
+            f"Uptime:\t{str(datetime.datetime.utcnow() - self.bot.start_time)}")
 
     # thanks willy again :)
     @commands.command()
