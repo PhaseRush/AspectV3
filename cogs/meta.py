@@ -102,7 +102,10 @@ class MetaCog(commands.Cog, name="Meta"):
             await self.git(ctx, "pull")
             mode = "update"
         mode += str(ctx.channel.id or ctx.author.id)
-        sys.argv[2] = mode
+        if len(sys.argv) >= 3:
+            sys.argv[2] = mode
+        else:
+            sys.argv.append(mode)
         os.execv(sys.executable, ['python'] + sys.argv)
 
     @commands.is_owner()
