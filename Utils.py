@@ -11,7 +11,7 @@ import re
 from typing import List
 
 markdown_pattern = re.compile(r"([*_`~\\])")
-triple_backtick_pattern = re.compile(r"(``)`")  # Discord does not support sending triple backticks in a code block.
+triple_backtick_pattern = re.compile(r"(```)")  # Discord does not support sending triple backticks in a code block.
 
 
 def sizeof(obj):
@@ -46,7 +46,7 @@ def timeit(f):
 
 def escape_md(s: str) -> str:
     group1: str = r"\1"
-    group2: str = r"\1 `"
+    group2: str = r"'''"
     escaped = re.sub(markdown_pattern, group1, s)
     if triple_backtick_pattern.search(escaped):
         escaped = re.sub(triple_backtick_pattern, group2, escaped)
