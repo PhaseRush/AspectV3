@@ -6,6 +6,7 @@ from threading import Lock, Timer
 from types import ModuleType, FunctionType
 from collections import defaultdict
 import re
+import logging
 
 # https://stackoverflow.com/a/30316760/10583298
 from typing import List
@@ -38,7 +39,7 @@ def timeit(f):
     async def timer(*args, **kwargs):
         start = time.time()
         result = await f(*args, **kwargs)
-        print(f'Execution time for command {f.__name__}: {"{:10.4f}".format((time.time() - start) * 1000)}ms')
+        logging.info(f'Execution time for command {f.__name__}: {"{:10.4f}".format((time.time() - start) * 1000)}ms')
         return result
 
     return timer
@@ -92,7 +93,7 @@ class Scheduler(object):
             self._lock.release()
 
     def _run(self):
-        # print(f"run called, function = {self.function}")
+        # logging.info(f"run called, function = {self.function}")
         self.start(from_run=True)
         self.function(*self.args, **self.kwargs)
 

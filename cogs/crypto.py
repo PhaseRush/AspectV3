@@ -1,21 +1,19 @@
+import copy
 import datetime
 import json
 import random
 import re
 import time
-from collections import defaultdict
-from typing import List, Optional
 from types import SimpleNamespace as Namespace
-import copy
-
-import urllib.request
-from tabulate import tabulate
+from typing import List, Optional
 
 import aiohttp
 import ccxt
 import discord
 from ccxt.base.errors import BadSymbol, RateLimitExceeded
 from discord.ext import commands, tasks
+from tabulate import tabulate
+import logging
 
 import Utils
 from config import KRAKEN_API_KEY, KRAKEN_API_PRIVATE_KEY
@@ -45,7 +43,7 @@ class Crypto(commands.Cog, name="Crypto"):
             'apiKey': KRAKEN_API_KEY,
             'secret': KRAKEN_API_PRIVATE_KEY,
         })
-        # print("ETH/CAD", json.dumps(self.kraken.fetch_ticker("ETH/CAD")["close"], indent=1))
+        # logging.info("ETH/CAD", json.dumps(self.kraken.fetch_ticker("ETH/CAD")["close"], indent=1))
 
         with open('./data/miner_alerts.json') as f:
             self.miner_alerts = json.load(f)
@@ -171,11 +169,11 @@ class Crypto(commands.Cog, name="Crypto"):
                 except BadSymbol:  # probably in USD/LTC-esque loop
                     target_to_common_price, target_to_common_change = self.get_price(target, common_currency)
                     common_to_target_price = 1.0 / target_to_common_price
-                print(origin_to_common_price, common_to_target_price)
+                logging.info(origin_to_common_price, common_to_target_price)
 
                 price = (origin_to_common_price * common_to_target_price, origin_to_common_change)
             except Exception as e:
-                print("Failed auto fix", origin, target, e)
+                logging.info("Failed auto fix", origin, target, e)
                 raise Exception("Unsupported ticker, automatic conversion failed. Try using USD.")
 
         except ValueError:
