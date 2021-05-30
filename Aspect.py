@@ -46,7 +46,6 @@ async def on_ready():
     # determine if we need to send reboot confirmation
     if len(sys.argv) > 2:
         if len(sys.argv[2]) > len("reboot") and sys.argv[2].startswith("reboot"):
-            logging.info(int(sys.argv[2][len("reboot"):]))
             prev_channel = bot.get_channel(id=int(sys.argv[2][len("reboot"):]))
             curr_hash = subprocess.run(["git", "rev-parse", "HEAD"], stdout=subprocess.PIPE, text=True).stdout
             await prev_channel.send(f"Aspect updated to ver: {curr_hash}")
