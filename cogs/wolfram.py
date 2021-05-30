@@ -33,7 +33,12 @@ class Wolfram:
         # url_encoded: str = urllib.parse.quote(query_str)
         payload: dict = {
             'appid': self.apikey,
-            'i': query_str
+            'i': query_str,
+            'background': '2C2F33',  # discord dark theme background colour
+            'foreground': 'white',
+            'width': '800',
+            'fontsize': '22',
+            'units': 'metric'
         }
         response = requests.get(self.endpoint, params=payload)
         image_response = Image.open(BytesIO(response.content))
