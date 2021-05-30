@@ -26,6 +26,7 @@ logging.basicConfig(level=logging.INFO,
 
 logging.info(f"Starting Aspect at {datetime.utcnow()}")
 
+
 class Aspect(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix='$', description="actually put something useful here eventually...",
@@ -42,12 +43,12 @@ async def on_ready():
     subr: SubredditLinker = SubredditLinker(bot=bot)
     # determine if we need to send reboot confirmation
     if len(sys.argv) > 1:
-        if len(sys.argv[1]) > len("reboot") and sys.argv[2].startswith("reboot"):
-            prev_channel = bot.get_channel(id=int(sys.argv[2][len("reboot"):]))
+        if len(sys.argv[1]) > len("reboot") and sys.argv[1].startswith("reboot"):
+            prev_channel = bot.get_channel(id=int(sys.argv[1][len("reboot"):]))
             curr_hash = subprocess.run(["git", "rev-parse", "HEAD"], stdout=subprocess.PIPE, text=True).stdout
             await prev_channel.send(f"Aspect updated to ver: {curr_hash}")
         elif sys.argv[1] == "reboot":
-            prev_channel = bot.get_channel(id=int(sys.argv[2][len("reboot"):]))
+            prev_channel = bot.get_channel(id=int(sys.argv[1][len("reboot"):]))
             await prev_channel.send(f"Aspect rebooted.")
 
 
