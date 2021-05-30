@@ -10,6 +10,7 @@ import uuid
 from math import sqrt
 from statistics import fmean, pstdev
 from typing import List
+import logging
 
 import discord
 from discord.ext import commands
@@ -101,6 +102,7 @@ class MetaCog(commands.Cog, name="Meta"):
             await self.git(ctx, "pull")
             mode = "update"
         mode += str(ctx.channel.id or ctx.author.id)
+        logging.info(mode)
         os.execv(sys.executable, ['python'] + sys.argv + [mode])
 
     @commands.is_owner()
