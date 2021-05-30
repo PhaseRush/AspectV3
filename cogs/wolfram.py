@@ -1,4 +1,11 @@
+import datetime
+import urllib.parse
+
 import discord
+import requests
+from PIL import Image
+from io import BytesIO
+import re
 import wolframalpha
 from discord.ext import commands
 
@@ -17,24 +24,42 @@ def submission_to_embed(res) -> discord.Embed:
         .set_footer(text="footer text", icon_url="http://youtube.com")
 
 
+class Wolfram:
+    def __init__(self):
+        self.apikey = WOLFRAM_ALPHA_APP_ID
+        self.endpoint = "https://api.wolframalpha.com/v1/simple?"
+
+    def query(self, query_str: str):
+        # url_encoded: str = urllib.parse.quote(query_str)
+        payload: dict = {
+            'appid': self.apikey,
+            'i': query_str
+        }
+        response = requests.get(self.endpoint, params=payload)
+        image_response = Image.open(BytesIO(response.content))
+        file_name = re.sub('[^0-9a-zA-Z]+', '_', query_str)
+        image_response.save(f"./cache/{file_name}.png")
+        return file_name
+
+
 class WolframCog(commands.Cog, name="Voice"):
     def __init__(self, bot):
         self.bot = bot
-        self.wolfram = wolframalpha.Client(WOLFRAM_ALPHA_APP_ID)
+        self.client = Wolfram()
 
     @commands.command(aliases=["_", "__"])
-    async def wolf(self, ctx: commands.Context, *args):  # ["temperature" "in" "vancouver"]
-        res = self.wolfram.query(' '.join(args))
+    async def wolf(self, ctx: commands.Context, *query):
+        file_name = self.client.query(' '.join(query))
         try:
-            texts = next(res.results).text
-            # await ctx.send(embed=)
-            await ctx.send(content=texts)
-        except StopIteration:
-            for pod in res.pods:
-                for sub in pod.subpods:
-                    print(1)
-                    x = sub.img.src
-
+            file = discord.File(f"./cache/{file_name}.png")
+            embed = discord.Embed(title="Wolfram Alpha",
+                                  colour=discord.Colour.orange(),
+                                  timestamp=datetime.datetime.utcnow())
+            embed.set_image(url=f"attachment://{file_name}.png")
+            await ctx.send(embed=embed, file=file)
+        except Exception as e:
+            print(str(e))
+            await ctx.send("Unable to perform wolfram query.")
 
 
 def setup(bot):
