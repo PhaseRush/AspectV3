@@ -45,7 +45,8 @@ class Wolfram:
         image_response = Image.open(BytesIO(response.content))
         file_name = re.sub('[^0-9a-zA-Z]+', '_', query_str)
         image_response.save(f"./cache/{file_name}.png")
-        return file_name
+        give_warning = image_response.size[1] > 1000
+        return file_name, give_warning
 
 
 class WolframCog(commands.Cog, name="Voice"):
@@ -55,12 +56,13 @@ class WolframCog(commands.Cog, name="Voice"):
 
     @commands.command(aliases=["_", "__"])
     async def wolf(self, ctx: commands.Context, *query):
-        file_name = self.client.query(' '.join(query))
+        file_name, give_warning = self.client.query(' '.join(query))
         try:
             file = discord.File(f"./cache/{file_name}.png")
             embed = discord.Embed(title="Wolfram Alpha",
                                   colour=discord.Colour.orange(),
-                                  timestamp=datetime.datetime.utcnow())
+                                  timestamp=datetime.datetime.utcnow(),
+                                  description="Click on the image, then \"Open Original\" to see more detail." if give_warning else "")
             embed.set_image(url=f"attachment://{file_name}.png")
             await ctx.send(embed=embed, file=file)
         except Exception as e:
