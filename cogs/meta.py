@@ -96,10 +96,12 @@ class MetaCog(commands.Cog, name="Meta"):
     @commands.is_owner()
     @commands.command(aliases=["restart"])
     async def reboot(self, ctx: commands.Context, options: str = None):
+        mode = "reboot"
         if options in {"update", "git pull"}:
             await self.git(ctx, "pull")
             await ctx.send("updating...")
-        os.execv(sys.executable, ['python'] + sys.argv)
+            mode += str(ctx.channel.id)
+        os.execv(sys.executable, ['python'] + sys.argv + [mode])
 
     @commands.is_owner()
     @commands.command()
