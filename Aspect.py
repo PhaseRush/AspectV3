@@ -22,6 +22,8 @@ logging.basicConfig(level=logging.INFO,
                         logging.StreamHandler(sys.stdout)
                     ])
 
+logging.info(f"Starting Aspect at {datetime.utcnow()}")
+
 
 class Aspect(commands.Bot):
     def __init__(self):
@@ -44,7 +46,8 @@ def load_cog(ext: str) -> int:
         tick = perf_counter()
         bot.load_extension(ext)
         tock = perf_counter()
-        logging.info(f'Loaded {ext[5:]: <{max([len(file) for file in os.listdir("./cogs")]) - 3}}in {(tock - tick):.5f}s')
+        logging.info(
+            f'Loaded {ext[5:]: <{max([len(file) for file in os.listdir("./cogs")]) - 3}}in {(tock - tick):.5f}s')
         return 1
     except Exception:
         logging.info(f"Failed to load {ext}")
