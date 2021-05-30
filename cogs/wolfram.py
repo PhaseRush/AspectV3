@@ -38,7 +38,8 @@ class Wolfram:
             'foreground': 'white',
             'width': '800',
             'fontsize': '22',
-            'units': 'metric'
+            'units': 'metric',
+            'layout': 'labelbar'
         }
         response = requests.get(self.endpoint, params=payload)
         image_response = Image.open(BytesIO(response.content))
