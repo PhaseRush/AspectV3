@@ -100,7 +100,7 @@ class MetaCog(commands.Cog, name="Meta"):
         if options in {"update", "git pull"}:
             await self.git(ctx, "pull")
             await ctx.send("updating...")
-            mode += str(ctx.channel.id)
+            mode += str(ctx.channel.id or ctx.author.id)
         os.execv(sys.executable, ['python'] + sys.argv + [mode])
 
     @commands.is_owner()
