@@ -1,16 +1,26 @@
 import datetime
 import os
+import sys
 import traceback
-from functools import reduce
+from datetime import datetime
+import time
+from time import perf_counter
 
 import discord
 from discord.ext import commands
-from discord.ext import tasks
-from datetime import datetime
-from time import perf_counter
 
 from cogs.reddit import SubredditLinker
 from config import DISCORD_TOKEN
+
+import logging
+
+logging.root.handlers = []
+logging.basicConfig(level=logging.INFO,
+                    format="%(asctime)s [%(levelname)s] %(message)s",
+                    handlers=[
+                        logging.FileHandler(f"./logs/debug-{int(time.time())}.log"),
+                        logging.StreamHandler(sys.stdout)
+                    ])
 
 
 class Aspect(commands.Bot):
@@ -25,7 +35,7 @@ bot = Aspect()
 
 @bot.event
 async def on_ready():
-    print(f'Logged on as {bot.user.name} id:{bot.user.id} at {datetime.now()}')
+    logging.info(f'Logged on as {bot.user.name} id:{bot.user.id} at {datetime.now()}')
     subr: SubredditLinker = SubredditLinker(bot=bot)
 
 
@@ -34,16 +44,16 @@ def load_cog(ext: str) -> int:
         tick = perf_counter()
         bot.load_extension(ext)
         tock = perf_counter()
-        print(f'Loaded {ext[5:]: <{max([len(file) for file in os.listdir("./cogs")]) - 3}}in {(tock - tick):.5f}s')
+        logging.info(f'Loaded {ext[5:]: <{max([len(file) for file in os.listdir("./cogs")]) - 3}}in {(tock - tick):.5f}s')
         return 1
     except Exception:
-        print(f"Failed to load {ext}")
+        logging.info(f"Failed to load {ext}")
         traceback.print_exc()
         return 0
 
 
 extensions = ['cogs.' + filename[:-3] for filename in os.listdir("./cogs") if filename.endswith(".py")]
 
-print(f"Successfully loaded {sum([load_cog(ext) for ext in extensions])} out of {len(extensions)} extensions")
+logging.info(f"Successfully loaded {sum([load_cog(ext) for ext in extensions])} out of {len(extensions)} extensions")
 
 bot.run(DISCORD_TOKEN)

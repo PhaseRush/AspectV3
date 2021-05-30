@@ -1,28 +1,14 @@
 import datetime
-import urllib.parse
+import re
+from io import BytesIO
 
 import discord
 import requests
 from PIL import Image
-from io import BytesIO
-import re
-import wolframalpha
 from discord.ext import commands
+import logging
 
 from config import WOLFRAM_ALPHA_APP_ID
-
-
-def submission_to_embed(res) -> discord.Embed:
-    return discord.Embed(
-        title="Wolfram Alpha",
-        url="temp url",
-        # timestamp=datetime.fromtimestamp(),
-        colour=discord.Colour.orange()
-    ) \
-        .set_image(url=res.url) \
-        .set_author(name=res.author.name, url="http://google.com", icon_url=res.author.icon_img) \
-        .set_footer(text="footer text", icon_url="http://youtube.com")
-
 
 class Wolfram:
     def __init__(self):
@@ -55,7 +41,7 @@ class WolframCog(commands.Cog, name="Voice"):
         self.client = Wolfram()
 
     @commands.command(aliases=["_", "__"])
-    async def wolf(self, ctx: commands.Context, *query):
+    async def wolfram(self, ctx: commands.Context, *query):
         file_name, give_warning = self.client.query(' '.join(query))
         try:
             file = discord.File(f"./cache/{file_name}.png")
@@ -66,7 +52,7 @@ class WolframCog(commands.Cog, name="Voice"):
             embed.set_image(url=f"attachment://{file_name}.png")
             await ctx.send(embed=embed, file=file)
         except Exception as e:
-            print(str(e))
+            logging.info(str(e))
             await ctx.send("Unable to perform wolfram query.")
 
 
