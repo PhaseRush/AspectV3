@@ -26,9 +26,6 @@ logging.basicConfig(level=logging.INFO,
 
 logging.info(f"Starting Aspect at {datetime.utcnow()}")
 
-logging.info(sys.argv)
-
-
 class Aspect(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix='$', description="actually put something useful here eventually...",
