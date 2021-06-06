@@ -30,7 +30,7 @@ logging.info(f"Starting Aspect at {datetime.utcnow()}")
 class Aspect(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix='$', description="actually put something useful here eventually...",
-                         activity=discord.Activity(type=discord.ActivityType.watching, name="ETH go to the moon"))
+                         activity=discord.Activity(type=discord.ActivityType.playing, name="with yarn."))
         self.start_time = datetime.utcnow()
 
 
@@ -42,9 +42,11 @@ async def on_ready():
     logging.info(f'Logged on as {bot.user.name} id:{bot.user.id} at {datetime.now()}')
     subr: SubredditLinker = SubredditLinker(bot=bot)
     # determine if we need to send reboot confirmation
+    logging.info(sys.argv)
     if len(sys.argv) > 1:
         if len(sys.argv[1]) > len("reboot") and sys.argv[1].startswith("reboot"):
             prev_channel = bot.get_channel(id=int(sys.argv[1][len("reboot"):]))
+            logging.info(int(sys.argv[1][len("reboot"):]))
             curr_hash = subprocess.run(["git", "rev-parse", "HEAD"], stdout=subprocess.PIPE, text=True).stdout
             await prev_channel.send(f"Aspect updated to ver: {curr_hash}")
         elif sys.argv[1] == "reboot":
