@@ -23,7 +23,7 @@ six==1.15.0
 update-checker==0.17
 urllib3==1.25.9
 websocket-client==0.57.0
-websockets==8.1
+websockets==9.1
 wolframalpha==4.0.0
 xmltodict==0.12.0
 yarl==1.4.2
