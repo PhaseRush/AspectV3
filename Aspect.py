@@ -54,6 +54,11 @@ async def on_ready():
             await prev_channel.send(f"Aspect rebooted.")
 
 
+@bot.before_invoke
+async def command_log(ctx: commands.Context):
+    logging.info(f"{ctx.author} {ctx.message.content} {ctx.message}")
+
+
 def load_cog(ext: str) -> int:
     try:
         tick = perf_counter()
