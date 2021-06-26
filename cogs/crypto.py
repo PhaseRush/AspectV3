@@ -50,7 +50,7 @@ class Crypto(commands.Cog, name="Crypto"):
 
         self.last_alerted = {}
         self.miner_ignore = {}
-        self.miner_check.start()
+        # self.miner_check.start()
 
         with open('./data/ethermine_addresses.json') as f:
             self.ethermine_addresses = json.load(f)
