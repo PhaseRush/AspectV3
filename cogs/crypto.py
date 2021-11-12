@@ -75,11 +75,13 @@ class Crypto(commands.Cog, name="Crypto"):
     async def before_ready(self):
         await self.bot.wait_until_ready()
 
-    @tasks.loop(seconds=10)
+    @tasks.loop(minutes=3)
     async def eth_activity_updater(self):
-        update_str, last_24 = self.get_price("ETH", "CAD")
+        cad, _ = self.get_price("ETH", "CAD")
+        usd, _ = self.get_price("ETH", "USD")
+        logging.info(f"Ran eth activity loop, {cad:.2f} {usd:.2f}")
         await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching,
-                                                                 name=f"1 ETH = {update_str:.2f} CAD"))
+                                                                 name=f"{cad:.2f} CAD / {usd:.2f} USD"))
 
     @eth_activity_updater.before_loop
     async def before_activity_update(self):
