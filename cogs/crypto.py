@@ -1,19 +1,19 @@
-import copy
 import datetime
 import json
+import logging
 import random
 import re
 import time
-from types import SimpleNamespace as Namespace
-from typing import List, Optional
+from collections import defaultdict
+from typing import List
+
+import urllib.request
 
 import aiohttp
 import ccxt
 import discord
 from ccxt.base.errors import BadSymbol, RateLimitExceeded
 from discord.ext import commands, tasks
-from tabulate import tabulate
-import logging
 
 import Utils
 from config import KRAKEN_API_KEY, KRAKEN_API_PRIVATE_KEY
@@ -27,6 +27,7 @@ INVALID_UPDATE_EXAMPLE = "ETH:2.091 BTC:0.0023 USD:230.01"
 PORTFOLIO_UPDATE_ALIASES = {"update", "replace", "set"}
 PORTFOLIO_VIEW_ALIASES = {"view", "check", "value", "show", None}  # None for default option
 PORTFOLIO_CHANGE_DEFAULT_FIAT = {"default_fiat", "fiat"}
+OFFLINE_THRESHOLD = 30
 
 
 class Crypto(commands.Cog, name="Crypto"):
@@ -43,19 +44,16 @@ class Crypto(commands.Cog, name="Crypto"):
             'apiKey': KRAKEN_API_KEY,
             'secret': KRAKEN_API_PRIVATE_KEY,
         })
-        # logging.info("ETH/CAD", json.dumps(self.kraken.fetch_ticker("ETH/CAD")["close"], indent=1))
+        # print("ETH/CAD", json.dumps(self.kraken.fetch_ticker("ETH/CAD")["close"], indent=1))
 
         with open('./data/miner_alerts.json') as f:
             self.miner_alerts = json.load(f)
 
         self.last_alerted = {}
-        self.miner_ignore = {}
-        # self.miner_check.start()
+        self.miner_check.start()
+        self.eth_activity_updater.start()
 
-        with open('./data/ethermine_addresses.json') as f:
-            self.ethermine_addresses = json.load(f)
-
-    @tasks.loop(seconds=30.0)
+    @tasks.loop(seconds=20.0)
     async def miner_check(self):
         async with aiohttp.ClientSession() as cs:
             for address, val in self.miner_alerts.items():
@@ -64,9 +62,8 @@ class Crypto(commands.Cog, name="Crypto"):
                     current_workers = {(item['worker'], item['lastSeen']) for item in ethermine_json['data']['workers']}
                     missing_workers = []
                     for name, last_seen in current_workers:
-                        if name not in self.miner_ignore.get(val['discord_user_id'], []):
-                            if name not in val['expected_miners'] or time.time() - last_seen > 30 * 60:
-                                missing_workers.append(name)
+                        if name not in val['expected_miners'] or ((time.time() - last_seen) > OFFLINE_THRESHOLD * 60):
+                            missing_workers.append(name)
                     if len(missing_workers):
                         if time.time() - self.last_alerted.get(address, 0) > val['alert_freq_sec']:
                             self.last_alerted[address] = time.time()
@@ -78,65 +75,15 @@ class Crypto(commands.Cog, name="Crypto"):
     async def before_ready(self):
         await self.bot.wait_until_ready()
 
-    @commands.command(aliases=["ignore"])
-    async def mute_miner_alert(self, ctx, miner_name):
-        if miner_name in self.miner_ignore.get(ctx.author.id, []):
-            self.miner_ignore.get(ctx.author.id).remove(miner_name)
-            await ctx.send(f"Removed {miner_name} from ignore list.")
-        else:
-            self.miner_ignore.get(ctx.author.id).append(miner_name)
-            await ctx.send(f"Added {miner_name} to ignore list")
+    @tasks.loop(seconds=10)
+    async def eth_activity_updater(self):
+        update_str, last_24 = self.get_price("ETH", "CAD")
+        await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching,
+                                                                 name=f"1 ETH = {update_str:.2f} CAD"))
 
-    @commands.command(aliases=["minerstat"])
-    async def mining_statistics(self, ctx: commands.Context, selector: Optional[str]):
-        cumulative_data = None
-        data_entries = []
-        addresses_to_merge = None
-        async with aiohttp.ClientSession() as cs:
-            if selector is None or selector == "":
-                addresses_to_merge = [self.ethermine_addresses.get(str(ctx.author.id),
-                                                                   self.ethermine_addresses.get(
-                                                                       "264213620026638336"))]
-            elif selector in {"all", "acc", "total"}:
-                addresses_to_merge = self.ethermine_addresses.values()
-
-            for addr in addresses_to_merge:
-                async with cs.get(f"https://api.ethermine.org/miner/:{addr}/currentStats") as ethermine:
-                    ethermine_json = json.dumps(await ethermine.json())
-                    curr_data = json.loads(ethermine_json, object_hook=lambda d: Namespace(**d)).data
-                    curr_data.addr = addr
-                    if cumulative_data is None:
-                        cumulative_data = curr_data
-                        data_entries.append(copy.deepcopy(curr_data))
-                    else:
-                        cumulative_data.reportedHashrate += curr_data.reportedHashrate
-                        cumulative_data.currentHashrate += curr_data.currentHashrate
-                        cumulative_data.averageHashrate += curr_data.averageHashrate
-                        cumulative_data.unpaid += curr_data.unpaid
-                        cumulative_data.usdPerMin += curr_data.usdPerMin
-                        data_entries.append(copy.deepcopy(curr_data))
-
-        headers = ["Wallet", "Avg. HR", "USD/Day"]
-        table = []
-
-        for data in data_entries:
-            table.append([f"{data.addr[:6]}...{data.addr[-4:]}",
-                          round(data.averageHashrate / 1e6, 2),
-                          round(data.usdPerMin * 60 * 24, 2)])
-
-        if len(data_entries) > 1:
-            table.append([f"Cumulative", round(cumulative_data.averageHashrate / 1e6, 2),
-                          round(cumulative_data.usdPerMin * 60 * 24, 2)])
-
-        desc = tabulate(table, headers=headers)
-
-        embed: discord.Embed = discord.Embed(
-            title=f"Ethermine report",
-            description=f"```{desc}```",
-            timestamp=datetime.datetime.utcnow(),
-            colour=ctx.author.colour
-        )
-        await ctx.send(embed=embed)
+    @eth_activity_updater.before_loop
+    async def before_activity_update(self):
+        await self.bot.wait_until_ready()
 
     def get_price(self, origin: str, target: str) -> (float, float):
         if origin == target:

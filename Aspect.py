@@ -8,7 +8,7 @@ from time import perf_counter
 import subprocess
 
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 from cogs.reddit import SubredditLinker
 from config import DISCORD_TOKEN
@@ -30,7 +30,7 @@ logging.info(f"Starting Aspect at {datetime.utcnow()}")
 class Aspect(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix='$', description="actually put something useful here eventually...",
-                         activity=discord.Activity(type=discord.ActivityType.playing, name="with yarn."))
+                         activity=discord.Activity(type=discord.ActivityType.watching, name=" my scripts load..."))
         self.start_time = datetime.utcnow()
 
 
