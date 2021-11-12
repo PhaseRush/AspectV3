@@ -27,7 +27,7 @@ INVALID_UPDATE_EXAMPLE = "ETH:2.091 BTC:0.0023 USD:230.01"
 PORTFOLIO_UPDATE_ALIASES = {"update", "replace", "set"}
 PORTFOLIO_VIEW_ALIASES = {"view", "check", "value", "show", None}  # None for default option
 PORTFOLIO_CHANGE_DEFAULT_FIAT = {"default_fiat", "fiat"}
-OFFLINE_THRESHOLD = 30
+OFFLINE_THRESHOLD_SECONDS = 30 * 60
 
 
 class Crypto(commands.Cog, name="Crypto"):
@@ -62,7 +62,7 @@ class Crypto(commands.Cog, name="Crypto"):
                     current_workers = {(item['worker'], item['lastSeen']) for item in ethermine_json['data']['workers']}
                     missing_workers = []
                     for name, last_seen in current_workers:
-                        if name not in val['expected_miners'] or ((time.time() - last_seen) > OFFLINE_THRESHOLD * 60):
+                        if name not in val['expected_miners'] or ((time.time() - last_seen) > OFFLINE_THRESHOLD_SECONDS):
                             missing_workers.append(name)
                     if len(missing_workers):
                         if time.time() - self.last_alerted.get(address, 0) > val['alert_freq_sec']:
