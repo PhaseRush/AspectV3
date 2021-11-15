@@ -60,13 +60,16 @@ class Crypto(commands.Cog, name="Crypto"):
                 if val['mute_until'] < time.time():  # if muted, dont check
                     async with cs.get(f"https://api.ethermine.org/miner/:{address}/dashboard") as ethermine:
                         ethermine_json = await ethermine.json()
-                        current_workers = {(item['worker'], item['lastSeen']) for item in
+                        current_workers = {item['worker']: item['lastSeen'] for item in
                                            ethermine_json['data']['workers']}
                         missing_workers = []
-                        for name, last_seen in current_workers:
-                            if name not in val['expected_miners'] or (
-                                    (time.time() - last_seen) > OFFLINE_THRESHOLD_SECONDS):
-                                missing_workers.append(name)
+                        for expected in val['expected_miners']:
+                            if expected not in current_workers.keys():  # expected worker does not exist
+                                missing_workers.append(expected)
+                            else:
+                                if time.time() - current_workers[expected] > OFFLINE_THRESHOLD_SECONDS:  # worker exists but is too old
+                                    missing_workers.append(expected)
+
                         if len(missing_workers):
                             if time.time() - self.last_alerted.get(address, 0) > val['alert_freq_sec']:
                                 self.last_alerted[address] = time.time()
