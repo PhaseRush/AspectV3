@@ -46,41 +46,7 @@ class Crypto(commands.Cog, name="Crypto"):
         })
         # print("ETH/CAD", json.dumps(self.kraken.fetch_ticker("ETH/CAD")["close"], indent=1))
 
-        with open('./data/miner_alerts.json') as f:
-            self.miner_alerts = json.load(f)
-
-        self.last_alerted = {}
-        self.miner_check.start()
         self.eth_activity_updater.start()
-
-    @tasks.loop(seconds=20.0)
-    async def miner_check(self):
-        async with aiohttp.ClientSession() as cs:
-            for address, val in self.miner_alerts.items():
-                if val['mute_until'] < time.time():  # if muted, dont check
-                    async with cs.get(f"https://api.ethermine.org/miner/:{address}/dashboard") as ethermine:
-                        ethermine_json = await ethermine.json()
-                        current_workers = {item['worker']: item['lastSeen'] for item in
-                                           ethermine_json['data']['workers']}
-                        missing_workers = []
-                        for expected in val['expected_miners']:
-                            if expected not in current_workers.keys():  # expected worker does not exist
-                                missing_workers.append(expected)
-                            else:
-                                if time.time() - current_workers[expected] > OFFLINE_THRESHOLD_SECONDS:  # worker exists but is too old
-                                    missing_workers.append(expected)
-
-                        if len(missing_workers):
-                            if time.time() - self.last_alerted.get(address, 0) > val['alert_freq_sec']:
-                                self.last_alerted[address] = time.time()
-                                for channel in [self.bot.get_channel(channel_id) for channel_id in val['channels']]:
-                                    await channel.send(
-                                        f"<@{val['discord_user_id']}> {','.join(missing_workers)} is down!\n"
-                                        f"https://ethermine.org/miners/{address}/dashboard")
-
-    @miner_check.before_loop
-    async def before_ready(self):
-        await self.bot.wait_until_ready()
 
     @tasks.loop(minutes=3)
     async def eth_activity_updater(self):
@@ -93,15 +59,6 @@ class Crypto(commands.Cog, name="Crypto"):
     @eth_activity_updater.before_loop
     async def before_activity_update(self):
         await self.bot.wait_until_ready()
-
-    @commands.command()
-    async def mute(self, ctx: commands.Context, duration_minutes: int):
-        for address, val in self.miner_alerts.items():
-            if int(val['discord_user_id']) == ctx.author.id:
-                val['mute_until'] = time.time() + duration_minutes * 60
-                with open('./data/miner_alerts.json', 'w', encoding='utf-8') as f:
-                    json.dump(self.miner_alerts, f, indent=2)
-                await ctx.send(f"Alerts for {address} have been muted for the next {duration_minutes} minutes")
 
     def get_price(self, origin: str, target: str) -> (float, float):
         if origin == target:
