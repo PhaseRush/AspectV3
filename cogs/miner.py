@@ -11,7 +11,6 @@ from discord.ext import commands, tasks
 
 OFFLINE_THRESHOLD_SECONDS = 30 * 60
 
-
 #  https://stackoverflow.com/a/14693789
 ansi_escape = re.compile(r'''
     \x1B  # ESC
@@ -25,6 +24,7 @@ ansi_escape = re.compile(r'''
     )
 ''', re.VERBOSE)
 
+
 class Miner(commands.Cog, name="Miner"):
     def __init__(self, bot):
         self.bot = bot
@@ -37,6 +37,12 @@ class Miner(commands.Cog, name="Miner"):
 
         self.last_alerted = {}
         self.miner_check.start()
+
+        self.client = paramiko.SSHClient()
+        self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())  # figuring out to add this took like 5 years
+        self.client.connect(self.miner_log['internal_ip'],
+                            username=self.miner_log['username'],
+                            password=self.miner_log['user_pw'])
 
         self.start_miner_output.start()
 
@@ -81,13 +87,7 @@ class Miner(commands.Cog, name="Miner"):
 
     @tasks.loop(count=1)
     async def start_miner_output(self):
-        logging.info("star")
-        client = paramiko.SSHClient()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())  # figuring out to add this took like 5 years
-        client.connect(self.miner_log['internal_ip'],
-                       username=self.miner_log['username'],
-                       password=self.miner_log['user_pw'])
-        stdin, stdout, stderr = client.exec_command("motd")
+        stdin, stdout, stderr = self.client.exec_command("motd")
         opt = "".join(stdout.readlines())
         opt = f"```\n{ansi_escape.sub('', opt)}\n```"  # remove colour codes and put into code block
         channel = self.bot.get_channel(self.miner_log['channel_id'])
@@ -96,6 +96,14 @@ class Miner(commands.Cog, name="Miner"):
     @start_miner_output.before_loop
     async def before_log(self):
         await self.bot.wait_until_ready()
+
+    @commands.is_owner()
+    @commands.command(aliases=["hive"])
+    async def run_command_on_hive(self, ctx: commands.Context, cmd: str):
+        stdin, stdout, stderr = self.client.exec_command(cmd)
+        opt = "".join(stdout.readlines())
+        opt = f"```\n{ansi_escape.sub('', opt)}\n```"  # remove colour codes and put into code block
+        await ctx.send(opt)
 
 
 def setup(bot):
