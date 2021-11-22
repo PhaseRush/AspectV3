@@ -9,6 +9,8 @@ import paramiko
 import re
 from discord.ext import commands, tasks
 
+from Utils import ShellHandler
+
 OFFLINE_THRESHOLD_SECONDS = 30 * 60
 
 #  https://stackoverflow.com/a/14693789
@@ -87,11 +89,27 @@ class Miner(commands.Cog, name="Miner"):
 
     @tasks.loop(count=1)
     async def start_miner_output(self):
-        stdin, stdout, stderr = self.client.exec_command("motd")
-        opt = "".join(stdout.readlines())
-        opt = f"```\n{ansi_escape.sub('', opt)}\n```"  # remove colour codes and put into code block
-        channel = self.bot.get_channel(self.miner_log['channel_id'])
-        await channel.send(opt)
+        discord_channel = self.bot.get_channel(self.miner_log['channel_id'])
+
+        client = paramiko.SSHClient()  # use separate client
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())  # figuring out to add this took like 5 years
+        client.connect(self.miner_log['internal_ip'],
+                       username=self.miner_log['username'],
+                       password=self.miner_log['user_pw'])
+        shell = client.invoke_shell()
+        shell.settimeout(0.0)  # do not time out
+
+        stdin, stdout, stdrr = client.exec_command("miner status")  # hack to own the screen
+        string_out: str = ""
+        idx: int = 1
+        for line in iter(lambda: stdout.readline(2048), ""):
+            string_out += f"\n{ansi_escape.sub('', line)}"
+            logging.info(string_out)
+            if idx % 3 == 0:
+                await discord_channel.send(f"```\n{string_out}\n```")
+                string_out = ""
+            # logging.info(f"`{ansi_escape.sub('', line)}`")
+            idx += 1
 
     @start_miner_output.before_loop
     async def before_log(self):
