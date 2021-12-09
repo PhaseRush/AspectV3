@@ -211,6 +211,20 @@ class Crypto(commands.Cog, name="Crypto"):
     def determine_change(self, values: List):
         return values[1] / values[0] / values[2]
 
+    @commands.is_owner()
+    @commands.command(aliases=["balance"])
+    async def wallet(self, ctx: commands.Context, currency: str = "CAD"):
+        balance = self.kraken.fetch_balance()
+        total = 0
+        for k, v in balance['total'].items():
+            # convert to usd first, since some tickers like ADA/CAD don't exist
+            converted, _ = self.get_price(k, "USD")
+            total += converted * float(v)
+
+        USD_to_target, _ = self.get_price("CAD", "USD")
+        total *= USD_to_target
+        await ctx.send(f"Wallet total: {total} {currency}\n{balance['total']}")
+
 
 def setup(bot):
     bot.add_cog(Crypto(bot))
