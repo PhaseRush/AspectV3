@@ -215,15 +215,21 @@ class Crypto(commands.Cog, name="Crypto"):
     @commands.command(aliases=["balance"])
     async def wallet(self, ctx: commands.Context, currency: str = "CAD"):
         balance = self.kraken.fetch_balance()
-        total = 0
+
+        totals: dict = {}
+        USD_to_target, _ = self.get_price("CAD", "USD")
         for k, v in balance['total'].items():
             # convert to usd first, since some tickers like ADA/CAD don't exist
             converted, _ = self.get_price(k, "USD")
-            total += converted * float(v)
+            totals[k] = converted * float(v) * USD_to_target
 
-        USD_to_target, _ = self.get_price("CAD", "USD")
-        total *= USD_to_target
-        await ctx.send(f"Wallet total: {total} {currency}\n{balance['total']}")
+        output: str = f"```\n{'Currency': <10}{'Value': >8}\n"
+        for k, v in totals.items():
+            output += f"{k: <10}{v: >8.2f}\n"
+
+        output += "-" * (10+8)
+        output += f"\n{'Total': <10}{sum(totals.values()): >8.2f}\n```"
+        await ctx.send(output)
 
 
 def setup(bot):
