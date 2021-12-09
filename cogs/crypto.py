@@ -217,18 +217,18 @@ class Crypto(commands.Cog, name="Crypto"):
         balance = self.kraken.fetch_balance()
 
         totals: dict = {}
-        USD_to_target, _ = self.get_price("CAD", "USD")
+        USD_to_target, _ = self.get_price(currency.upper(), "USD")
         for k, v in balance['total'].items():
             # convert to usd first, since some tickers like ADA/CAD don't exist
             converted, _ = self.get_price(k, "USD")
             totals[k] = converted * float(v) * USD_to_target
 
-        output: str = f"```\n{'Currency': <10}{'Value': >8}\n"
+        output: str = f"```\n{'Currency': <10}{'Value (' + currency + ')': >11}\n"
         for k, v in totals.items():
-            output += f"{k: <10}{v: >8.2f}\n"
+            output += f"{k: <10}{v: >11.2f}\n"
 
-        output += "-" * (10+8)
-        output += f"\n{'Total': <10}{sum(totals.values()): >8.2f}\n```"
+        output += "-" * (10 + 11)
+        output += f"\n{'Total': <10}{sum(totals.values()): >11.2f}\n```"
         await ctx.send(output)
 
 
