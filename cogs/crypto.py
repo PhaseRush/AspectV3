@@ -217,7 +217,11 @@ class Crypto(commands.Cog, name="Crypto"):
         balance = self.kraken.fetch_balance()
 
         totals: dict = {}
-        USD_to_target, _ = self.get_price(currency.upper(), "USD")
+        if currency in FIAT_SET:
+            USD_to_target, _ = self.get_price(currency.upper(), "USD")
+        else:
+            USD_to_target, _ = self.get_price("USD", currency.upper())
+
         for k, v in balance['total'].items():
             # convert to usd first, since some tickers like ADA/CAD don't exist
             converted, _ = self.get_price(k, "USD")
