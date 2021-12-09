@@ -217,7 +217,7 @@ class Crypto(commands.Cog, name="Crypto"):
         balance = self.kraken.fetch_balance()
 
         totals: dict = {}
-        if currency in FIAT_SET:
+        if currency.upper() in FIAT_SET:
             USD_to_target, _ = self.get_price(currency.upper(), "USD")
         else:
             USD_to_target, _ = self.get_price("USD", currency.upper())
