@@ -227,12 +227,12 @@ class Crypto(commands.Cog, name="Crypto"):
             converted, _ = self.get_price(k, "USD")
             totals[k] = converted * float(v) * USD_to_target
 
-        output: str = f"```\n{'Currency': <10}{'Value (' + currency + ')': >11}\n"
+        output: str = f"```\n{'Currency': <8}{'Quantity': ^10}{'Value (' + currency + ')': >11}\n"
         for k, v in totals.items():
-            output += f"{k: <10}{v: >11.2f}\n"
+            output += f"{k: <8}{balance['total'][k]: >10.5f}{v: >11.2f}\n"
 
-        output += "-" * (10 + 11)
-        output += f"\n{'Total': <10}{sum(totals.values()): >11.2f}\n```"
+        output += "-" * (8 + 10 + 11)
+        output += f"\n{'Total': <8}{' '* 10 }{sum(totals.values()): >11.2f}\n```"
         await ctx.send(output)
 
 
