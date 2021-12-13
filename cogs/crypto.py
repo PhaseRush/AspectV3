@@ -40,6 +40,15 @@ class Crypto(commands.Cog, name="Crypto"):
         with open('./data/crypto_tickers.json') as f:
             self.tickers = json.load(f)
 
+        self.wallets = {}
+        with open('./data/wallets.json') as f:
+            wallet_json = json.load(f)
+            for k, v in wallet_json.items():
+                self.wallets[k] = ccxt.kraken({
+                    'apiKey': v['kraken_api_key'],
+                    'secret': v['kraken_api_private'],
+                })
+
         self.kraken = ccxt.kraken({
             'apiKey': KRAKEN_API_KEY,
             'secret': KRAKEN_API_PRIVATE_KEY,
@@ -211,10 +220,11 @@ class Crypto(commands.Cog, name="Crypto"):
     def determine_change(self, values: List):
         return values[1] / values[0] / values[2]
 
-    @commands.is_owner()
     @commands.command(aliases=["balance"])
     async def wallet(self, ctx: commands.Context, currency: str = "CAD"):
-        balance = self.kraken.fetch_balance()
+        if str(ctx.author.id) not in self.wallets.keys():
+            return
+        balance = self.wallets[str(ctx.author.id)].fetch_balance()
 
         totals: dict = {}
         if currency.upper() in FIAT_SET:
@@ -225,14 +235,16 @@ class Crypto(commands.Cog, name="Crypto"):
         for k, v in balance['total'].items():
             # convert to usd first, since some tickers like ADA/CAD don't exist
             converted, _ = self.get_price(k, "USD")
-            totals[k] = converted * float(v) * USD_to_target
+            calc_value = converted * float(v) * USD_to_target
+            if calc_value > 1 :
+                totals[k] = calc_value
 
         output: str = f"```\n{'Currency': <8}{'Quantity': ^10}{'Value (' + currency + ')': >11}\n"
         for k, v in totals.items():
             output += f"{k: <8}{balance['total'][k]: >10.5f}{v: >11.2f}\n"
 
         output += "-" * (8 + 10 + 11)
-        output += f"\n{'Total': <8}{' '* 10 }{sum(totals.values()): >11.2f}\n```"
+        output += f"\n{'Total': <8}{' ' * 10}{sum(totals.values()): >11.2f}\n```"
         await ctx.send(output)
 
 
