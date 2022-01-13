@@ -22,7 +22,7 @@ kiwisolver==1.2.0
 matplotlib==3.3.2
 more-itertools==8.4.0
 multidict==4.7.6
-numpy==1.19.2
+numpy==1.21.0
 oauthlib==3.1.0
 Pillow==9.0.0
 pip==21.1
