@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import socket
 import time
 
 import aiohttp
@@ -9,7 +10,6 @@ import paramiko
 import re
 from discord.ext import commands, tasks
 
-from Utils import ShellHandler
 
 OFFLINE_THRESHOLD_SECONDS = 30 * 60
 
@@ -42,11 +42,11 @@ class Miner(commands.Cog, name="Miner"):
 
         self.client = paramiko.SSHClient()
         self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())  # figuring out to add this took like 5 years
-        self.client.connect(self.miner_log['internal_ip'],
-                            username=self.miner_log['username'],
-                            password=self.miner_log['user_pw'])
+        # self.client.connect(self.miner_log['internal_ip'],
+        #                     username=self.miner_log['username'],
+        #                     password=self.miner_log['user_pw'])
 
-        self.start_miner_output.start()
+        # self.start_miner_output.start()
 
     @tasks.loop(seconds=20.0)
     async def miner_check(self):
@@ -87,36 +87,45 @@ class Miner(commands.Cog, name="Miner"):
                     json.dump(self.miner_alerts, f, indent=2)
                 await ctx.send(f"Alerts for {address} have been muted for the next {duration_minutes} minutes")
 
-    @tasks.loop(count=1)
-    async def start_miner_output(self):
-        discord_channel = self.bot.get_channel(self.miner_log['channel_id'])
-
-        client = paramiko.SSHClient()  # use separate client
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())  # figuring out to add this took like 5 years
-        client.connect(self.miner_log['internal_ip'],
-                       username=self.miner_log['username'],
-                       password=self.miner_log['user_pw'])
-        shell = client.invoke_shell()
-        shell.settimeout(0.0)  # do not time out
-
-        stdin, stdout, stdrr = client.exec_command("miner status")  # hack to own the screen
-        string_out: str = ""
-        idx: int = 1
-        for line in iter(lambda: stdout.readline(2048), ""):
-            string_out += f"\n{ansi_escape.sub('', line)}"
-            logging.info(string_out)
-            if idx % 3 == 0:
-                await discord_channel.send(f"```\n{string_out}\n```")
-                string_out = ""
-            # logging.info(f"`{ansi_escape.sub('', line)}`")
-            idx += 1
-
-    @start_miner_output.before_loop
-    async def before_log(self):
-        await self.bot.wait_until_ready()
+    # @tasks.loop(count=1)
+    # async def start_miner_output(self):
+    #     discord_channel = self.bot.get_channel(self.miner_log['channel_id'])
+    #
+    #     client = paramiko.SSHClient()  # use separate client
+    #     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())  # figuring out to add this took like 5 years
+    #     client.connect(self.miner_log['internal_ip'],
+    #                    username=self.miner_log['username'],
+    #                    password=self.miner_log['user_pw'])
+    #     shell = client.invoke_shell()
+    #     shell.settimeout(0.0)  # do not time out
+    #
+    #     # stdin, stdout, stdrr = client.exec_command("miner status")  # hack to own the screen
+    #     string_out: str = ""
+    #     idx: int = 1
+    #     #
+    #     # while True:
+    #     #     try:
+    #     #         while shell.recv_ready():
+    #     #             string_out = shell.recv(2048).decode('utf-8')
+    #     #             logging.info(string_out)
+    #     #     except paramiko.ssh_exception.SSHException:
+    #     #         pass
+    #
+    #     # for line in iter(lambda: stdout.readline(2048), ""):
+    #     #     string_out += f"\n{ansi_escape.sub('', line)}"
+    #     #     logging.info(string_out)
+    #     #     if idx % 3 == 0:
+    #     #         await discord_channel.send(f"```\n{string_out}\n```")
+    #     #         string_out = ""
+    #     #     # logging.info(f"`{ansi_escape.sub('', line)}`")
+    #     #     idx += 1
+    #
+    # @start_miner_output.before_loop
+    # async def before_log(self):
+    #     await self.bot.wait_until_ready()
 
     @commands.is_owner()
-    @commands.command(aliases=["hive"])
+    @commands.command(aliases=["hive", "h"])
     async def run_command_on_hive(self, ctx: commands.Context, cmd: str):
         stdin, stdout, stderr = self.client.exec_command(cmd)
         opt = "".join(stdout.readlines())
