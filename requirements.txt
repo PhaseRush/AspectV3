@@ -34,7 +34,7 @@ matplotlib==3.3.2
 more-itertools==8.4.0
 multidict==4.7.6
 mypy-extensions==0.4.3
-numpy==1.19.2
+numpy==1.22.0
 oauthlib==3.1.0
 opencv-python==4.5.2.54
 paramiko==2.8.0
