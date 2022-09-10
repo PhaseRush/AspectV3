@@ -1,3 +1,6 @@
+import random
+import time
+
 from discord.ext import commands
 import re
 import deepl
@@ -8,6 +11,7 @@ class Autotranslate(commands.Cog, name="Autotranslate"):
     def __init__(self, bot):
         self.bot = bot
         self.deepl = deepl.Translator(DEEPL_TOKEN)
+        self.rand = random.Random()
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -19,8 +23,15 @@ class Autotranslate(commands.Cog, name="Autotranslate"):
 
         msg: str = message.content
         chinese_blocks = {}
+
+        already_trolled: bool = False
         for block in re.findall(r'[\u4e00-\u9fff]+', msg):
             chinese_blocks[block] = self.deepl.translate_text(block, source_lang="ZH", target_lang="EN-GB").text
+            if message.author.id == 969035316008714250:
+                if self.rand.random() < 0.1 and not already_trolled:
+                    await message.channel.send("[I'm a dog woof woof]")
+                    time.sleep(3)
+                    already_trolled = True
 
         if len(chinese_blocks) == 0:
             return
