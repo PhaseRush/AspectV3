@@ -30,7 +30,8 @@ logging.info(f"Starting Aspect at {datetime.utcnow()}")
 class Aspect(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix='$', description="actually put something useful here eventually...",
-                         activity=discord.Activity(type=discord.ActivityType.watching, name=" my scripts load..."))
+                         activity=discord.Activity(type=discord.ActivityType.watching, name=" my scripts load..."),
+                         intents=discord.Intents.default(), self_bot=False)
         self.start_time = datetime.utcnow()
 
 

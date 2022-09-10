@@ -7,7 +7,6 @@ attrs==19.3.0
 bcrypt==3.2.0
 ccxt==1.46.22
 certifi==2020.6.20
-cffi==1.14.0
 chardet==3.0.4
 charset-normalizer==2.0.7
 colorama==0.4.4
@@ -32,9 +31,7 @@ marshmallow-enum==1.5.1
 marshmallow==3.14.0
 matplotlib==3.3.2
 more-itertools==8.4.0
-multidict==4.7.6
 mypy-extensions==0.4.3
-numpy==1.19.2
 oauthlib==3.1.0
 opencv-python==4.5.2.54
 paramiko==2.8.0
@@ -71,3 +68,4 @@ wolframalpha==4.0.0
 xmltodict==0.12.0
 yarl==1.1.0
 youtube-search-python==1.4.9
+deepl
