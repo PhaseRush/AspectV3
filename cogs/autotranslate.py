@@ -4,6 +4,7 @@ import time
 from discord.ext import commands
 import re
 import deepl
+import pinyin
 from config import DEEPL_TOKEN
 
 
@@ -26,10 +27,11 @@ class Autotranslate(commands.Cog, name="Autotranslate"):
 
         if message.author.id == 969035316008714250:
             if self.rand.random() < 0.1:
-                await message.channel.send("[I'm a dog woof woof]")
+                await message.channel.send(f"{message.author}: [I'm a dog woof woof]")
                 time.sleep(3)
 
-        await message.channel.send(f"{message.author}: {self.deepl.translate_text(message.content, source_lang='ZH', target_lang='EN-GB').text}")
+        await message.channel.send(f"{message.author}: {self.deepl.translate_text(message.content, source_lang='ZH', target_lang='EN-GB').text}\n"
+                                   f"{pinyin.get(message.content, delimiter=' ')}")
 
 
 def setup(bot):

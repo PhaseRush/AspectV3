@@ -69,3 +69,4 @@ xmltodict==0.12.0
 yarl==1.1.0
 youtube-search-python==1.4.9
 deepl
+pinyin==0.4.0
