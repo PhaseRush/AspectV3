@@ -1,6 +1,7 @@
 import random
 import time
 
+import discord
 from discord.ext import commands
 import re
 import deepl
@@ -14,8 +15,7 @@ class Autotranslate(commands.Cog, name="Autotranslate"):
         self.deepl = deepl.Translator(DEEPL_TOKEN)
         self.rand = random.Random()
 
-    @commands.Cog.listener()
-    async def on_message(self, message):
+    async def autotranslate(self, message):
         if message.author == self.bot.user:
             return
 
@@ -30,8 +30,17 @@ class Autotranslate(commands.Cog, name="Autotranslate"):
                 await message.channel.send(f"{message.author}: [I'm a dog woof woof]")
                 time.sleep(3)
 
-        await message.channel.send(f"{message.author}: {self.deepl.translate_text(message.content, source_lang='ZH', target_lang='EN-GB').text}\n"
-                                   f"{pinyin.get(message.content, delimiter=' ')}")
+        await message.channel.send(
+            f"{message.author}: {self.deepl.translate_text(message.content, source_lang='ZH', target_lang='EN-GB').text}\n"
+            f"{pinyin.get(message.content, delimiter=' ')}")
+
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        await self.autotranslate(message)
+
+    @commands.Cog.listener()
+    async def on_message_edit(self, _: discord.Message, after: discord.Message):
+        await self.autotranslate(after)
 
 
 def setup(bot):
