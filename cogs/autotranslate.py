@@ -11,6 +11,7 @@ from config import DEEPL_TOKEN
 
 class Autotranslate(commands.Cog, name="Autotranslate"):
     def __init__(self, bot):
+        self.dog_prob = 0.01
         self.bot = bot
         self.deepl = deepl.Translator(DEEPL_TOKEN)
         self.rand = random.Random()
@@ -26,7 +27,7 @@ class Autotranslate(commands.Cog, name="Autotranslate"):
             return
 
         if message.author.id == 969035316008714250:
-            if self.rand.random() < 0.1:
+            if self.rand.random() < self.dog_prob:
                 await message.channel.send(f"{message.author}: [I'm a dog woof woof]")
                 time.sleep(3)
 
@@ -41,6 +42,12 @@ class Autotranslate(commands.Cog, name="Autotranslate"):
     @commands.Cog.listener()
     async def on_message_edit(self, _: discord.Message, after: discord.Message):
         await self.autotranslate(after)
+
+    @commands.command(name="at_prob")
+    async def modify_prob(self, ctx: commands.Context, new_prob: str):
+        if ctx.author.id != 264213620026638336:
+            return
+        self.dog_prob = float(new_prob)
 
 
 def setup(bot):
