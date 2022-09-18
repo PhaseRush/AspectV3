@@ -49,6 +49,19 @@ class Autotranslate(commands.Cog, name="Autotranslate"):
             return
         self.dog_prob = float(new_prob)
 
+    @commands.command(name="en")
+    async def modify_prob(self, ctx: commands.Context, *, en: str):
+        if ctx.author == self.bot.user:
+            return
+
+        if ctx.guild.id != 773029270863872050:
+            return
+
+        chinese: str = self.deepl.translate_text(en, source_lang='EN', target_lang='ZH').text
+        await ctx.send(
+            f"{ctx.author}: {chinese}\n"
+            f"{pinyin.get(chinese, delimiter=' ')}")
+
 
 def setup(bot):
     bot.add_cog(Autotranslate(bot))
