@@ -1,3 +1,4 @@
+import codecs
 import datetime
 import os
 import sys
@@ -16,11 +17,10 @@ from config import DISCORD_TOKEN
 import logging
 
 logging.root.handlers = []
-# noinspection PyArgumentList
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s [%(levelname)s] %(message)s",
                     handlers=[
-                        logging.FileHandler(f"./logs/debug-{int(time.time())}.log"),
+                        logging.FileHandler(f"./logs/debug-{int(time.time())}.log", "w", "utf-8"),
                         logging.StreamHandler(sys.stdout)
                     ])
 

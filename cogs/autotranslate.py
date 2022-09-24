@@ -1,3 +1,4 @@
+import logging
 import random
 import time
 
@@ -31,9 +32,12 @@ class Autotranslate(commands.Cog, name="Autotranslate"):
                 await message.channel.send(f"{message.author}: [I'm a dog woof woof]")
                 time.sleep(3)
 
-        await message.channel.send(
-            f"{message.author}: {self.deepl.translate_text(message.content, source_lang='ZH', target_lang='EN-GB').text}\n"
-            f"{pinyin.get(message.content, delimiter=' ')}")
+        async with message.channel.typing():
+            translation: str = self.deepl.translate_text(message.content, source_lang='ZH', target_lang='EN-GB').text
+            await message.channel.send(
+                f"{message.author}: {translation}\n"
+                f"{pinyin.get(message.content, delimiter=' ')}")
+            logging.info(f"Translated: \"{message.content}\" as \"{translation}\"")
 
     @commands.Cog.listener()
     async def on_message(self, message):
