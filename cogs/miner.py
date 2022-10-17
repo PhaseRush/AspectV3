@@ -31,14 +31,14 @@ class Miner(commands.Cog, name="Miner"):
     def __init__(self, bot):
         self.bot = bot
 
-        with open('./data/miner_alerts.json') as g:
-            self.miner_alerts = json.load(g)
-
-        with open('./data/miner_log.json') as g:
-            self.miner_log = json.load(g)
-
-        self.last_alerted = {}
-        self.miner_check.start()
+        # with open('./data/miner_alerts.json') as g:
+        #     self.miner_alerts = json.load(g)
+        #
+        # with open('./data/miner_log.json') as g:
+        #     self.miner_log = json.load(g)
+        #
+        # self.last_alerted = {}
+        # self.miner_check.start()
 
         self.client = paramiko.SSHClient()
         self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())  # figuring out to add this took like 5 years
@@ -74,9 +74,9 @@ class Miner(commands.Cog, name="Miner"):
                                         f"<@{val['discord_user_id']}> {','.join(missing_workers)} is down!\n"
                                         f"https://ethermine.org/miners/{address}/dashboard")
 
-    @miner_check.before_loop
-    async def before_ready(self):
-        await self.bot.wait_until_ready()
+    # @miner_check.before_loop
+    # async def before_ready(self):
+    #     await self.bot.wait_until_ready()
 
     @commands.command()
     async def mute(self, ctx: commands.Context, duration_minutes: int):
