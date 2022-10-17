@@ -62,9 +62,12 @@ class LeagueGuessingCog(commands.Cog, name="Guess"):
         try:
             self.all_match_data = pickle.load(open("data/leaguesite/all_match_data.pkl", "rb"))
         except:
-            self.all_match_data += parse_html("data/leaguesite/lcs_raw.html")
-            self.all_match_data += parse_html("data/leaguesite/lpl_raw.html")
-            pickle.dump(self.all_match_data, open("data/leaguesite/all_match_data.pkl", "wb"))
+            try:
+                self.all_match_data += parse_html("data/leaguesite/lcs_raw.html")
+                self.all_match_data += parse_html("data/leaguesite/lpl_raw.html")
+                pickle.dump(self.all_match_data, open("data/leaguesite/all_match_data.pkl", "wb"))
+            except:
+                logging.info("Skipping league game data loading. Likely running in jail env.")
         logging.info(f"Loaded {len(self.all_match_data)} games")
 
     @commands.command(aliases=['g'])
