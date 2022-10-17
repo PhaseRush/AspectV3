@@ -34,20 +34,23 @@ class Crypto(commands.Cog, name="Crypto"):
     def __init__(self, bot):
         self.bot = bot
         self.default_market = ccxt.bitmex()  # todo
-        with open('./data/crypto_profiles.json') as f:
-            self.user_profiles = json.load(f)
+        try:
+            with open('./data/crypto_profiles.json') as f:
+                self.user_profiles = json.load(f)
 
-        with open('./data/crypto_tickers.json') as f:
-            self.tickers = json.load(f)
+            with open('./data/crypto_tickers.json') as f:
+                self.tickers = json.load(f)
 
-        self.wallets = {}
-        with open('./data/wallets.json') as f:
-            wallet_json = json.load(f)
-            for k, v in wallet_json.items():
-                self.wallets[k] = ccxt.kraken({
-                    'apiKey': v['kraken_api_key'],
-                    'secret': v['kraken_api_private'],
-                })
+            self.wallets = {}
+            with open('./data/wallets.json') as f:
+                wallet_json = json.load(f)
+                for k, v in wallet_json.items():
+                    self.wallets[k] = ccxt.kraken({
+                        'apiKey': v['kraken_api_key'],
+                        'secret': v['kraken_api_private'],
+                    })
+        except:
+            logging.info("Could not load crypto profiles, likely running in jail env.")
 
         self.kraken = ccxt.kraken({
             'apiKey': KRAKEN_API_KEY,
