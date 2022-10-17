@@ -48,7 +48,7 @@ class Miner(commands.Cog, name="Miner"):
 
         # self.start_miner_output.start()
 
-    @tasks.loop(seconds=20.0)
+    # @tasks.loop(seconds=20.0)
     async def miner_check(self):
         async with aiohttp.ClientSession() as cs:
             for address, val in self.miner_alerts.items():
