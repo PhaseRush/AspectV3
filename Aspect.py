@@ -16,11 +16,14 @@ from config import DISCORD_TOKEN
 
 import logging
 
+dir = os.path.dirname(__file__)
+
 logging.root.handlers = []
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s [%(levelname)s] %(message)s",
                     handlers=[
-                        logging.FileHandler(f"./logs/debug-{int(time.time())}.log", "w", "utf-8"),
+                        # logging.FileHandler(f"./logs/debug-{int(time.time())}.log", "w", "utf-8"),
+                        logging.FileHandler(os.path.join(dir, "logs", f"debug-{int(time.time())}.log"), "w", "utf-8"),
                         logging.StreamHandler(sys.stdout)
                     ])
 
@@ -59,6 +62,7 @@ async def on_ready():
 async def command_log(ctx: commands.Context):
     logging.info(f"{ctx.author} {ctx.message.content} {ctx.message}")
 
+cogs_dir = os.path.join(dir, "cogs")
 
 def load_cog(ext: str) -> int:
     try:
@@ -66,7 +70,7 @@ def load_cog(ext: str) -> int:
         bot.load_extension(ext)
         tock = perf_counter()
         logging.info(
-            f'Loaded {ext[5:]: <{max([len(file) for file in os.listdir("./cogs")]) - 3}} in {(tock - tick):.5f}s')
+            f'Loaded {ext[5:]: <{max([len(file) for file in os.listdir(cogs_dir)]) - 3}} in {(tock - tick):.5f}s')
         return 1
     except Exception:
         logging.info(f"Failed to load {ext}")
@@ -74,7 +78,7 @@ def load_cog(ext: str) -> int:
         return 0
 
 
-extensions = ['cogs.' + filename[:-3] for filename in os.listdir("./cogs") if filename.endswith(".py")]
+extensions = ['cogs.' + filename[:-3] for filename in os.listdir(cogs_dir) if filename.endswith(".py")]
 
 logging.info(f"Successfully loaded {sum([load_cog(ext) for ext in extensions])} out of {len(extensions)} extensions")
 
