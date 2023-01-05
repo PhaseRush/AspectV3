@@ -1,3 +1,4 @@
+import ast
 import asyncio
 import copy
 import datetime
@@ -9,8 +10,11 @@ import time
 import uuid
 from math import sqrt
 from statistics import fmean, pstdev
-from typing import List
-import logging
+from typing import List, Optional, Any
+import textwrap
+import io
+from contextlib import redirect_stdout
+import traceback
 
 import discord
 from discord.ext import commands
@@ -32,7 +36,6 @@ async def find_ping(ctx: commands.Context, latest_msg: discord.Message) -> (floa
     gateway_ping = gateway_ping_diff.total_seconds() * 1000
     api_ping = api_ping_diff.total_seconds() * 1000
     websocket_latency = ctx.bot.latency * 1000
-    return websocket_latency, gateway_ping, api_ping
 
 
 # thanks willy :)
@@ -53,9 +56,21 @@ async def copy_context(src_ctx: commands.Context, *, author=None, channel=None, 
     return await src_ctx.bot.get_context(alt_message, cls=type(src_ctx))
 
 
+def cleanup_code(content: str) -> str:
+    """Automatically removes code blocks from the code."""
+    # remove ```py\n```
+    if content.startswith('```') and content.endswith('```'):
+        return '\n'.join(content.split('\n')[1:-1])
+
+    # remove `foo`
+    return content.strip('` \n')
+
+
 class MetaCog(commands.Cog, name="Meta"):
     def __init__(self, bot):
         self.bot = bot
+        self._last_result: Optional[Any] = None
+        self.sessions: set[int] = set()
 
     @commands.command()
     async def hello(self, ctx: commands.Context):
@@ -196,6 +211,54 @@ class MetaCog(commands.Cog, name="Meta"):
         end = time.perf_counter()
 
         return await ctx.send(f'`{command_string}` finished in {end - start:.3f}s.')
+
+    @commands.command(hidden=True, name='eval')
+    @commands.is_owner()
+    async def _eval(self, ctx: commands.Context, *, body: str):
+        """Evaluates a code"""
+
+        env = {
+            'bot': self.bot,
+            'ctx': ctx,
+            'channel': ctx.channel,
+            'author': ctx.author,
+            'guild': ctx.guild,
+            'message': ctx.message,
+            '_': self._last_result,
+        }
+
+        env.update(globals())
+
+        body = cleanup_code(body)
+        stdout = io.StringIO()
+
+        to_compile = f'async def func():\n{textwrap.indent(body, "  ")}'
+
+        try:
+            exec(to_compile, env)
+        except Exception as e:
+            return await ctx.send(f'```py\n{e.__class__.__name__}: {e}\n```')
+
+        func = env['func']
+        try:
+            with redirect_stdout(stdout):
+                ret = await func()
+        except Exception as e:
+            value = stdout.getvalue()
+            await ctx.send(f'```py\n{value}{traceback.format_exc()}\n```')
+        else:
+            value = stdout.getvalue()
+            try:
+                await ctx.message.add_reaction('\u2705')
+            except:
+                pass
+
+            if ret is None:
+                if value:
+                    await ctx.send(f'```py\n{value}\n```')
+            else:
+                self._last_result = ret
+                await ctx.send(f'```py\n{value}{ret}\n```')
 
 
 def setup(bot):
