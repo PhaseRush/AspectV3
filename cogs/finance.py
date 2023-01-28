@@ -9,12 +9,12 @@ from discord.ext import commands
 
 
 def format_market_cap(market_cap: float) -> str:
-    if market_cap > 10e12:
-        return f"{(market_cap // 10e9) / 1000}T"
-    elif market_cap > 10e9:
-        return f"{(market_cap // 10e6) / 1000}B"
-    elif market_cap > 10e6:
-        return f"{(market_cap // 10e3) / 1000}M"
+    if market_cap > 1e12:
+        return f"{(market_cap // 10e9) / 100}T"
+    elif market_cap > 1e9:
+        return f"{(market_cap // 10e6) / 100}B"
+    elif market_cap > 1e6:
+        return f"{(market_cap // 10e3) / 100}M"
 
 
 class Finance(commands.Cog, name="Finance"):
