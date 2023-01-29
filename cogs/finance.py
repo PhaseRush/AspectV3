@@ -2,6 +2,14 @@ import datetime
 from typing import List
 
 import discord
+
+import os
+import matplotlib as mpl
+
+if os.environ.get('DISPLAY', '') == '':
+    print('no display found. Using non-interactive Agg backend')
+    mpl.use('Agg')
+
 import matplotlib.pyplot as plt
 import pandas as pd
 import yfinance as yf
@@ -40,7 +48,7 @@ class Finance(commands.Cog, name="Finance"):
 
         data_formatted = pd.DataFrame.from_dict(info.info, orient='index')
 
-            # f"{'Beta (5Y Monthly)': <15}{info.info['beta']: >25}\n" + \
+        # f"{'Beta (5Y Monthly)': <15}{info.info['beta']: >25}\n" + \
         desc: str = f"{'Prev. close': <15}{round(fast.previous_close, 2): >25}\n" + \
                     f"{'Open': <15}{round(fast.open, 2): >25}\n" + \
                     f"{'Days range': <15}{day_range: >25}\n" + \
