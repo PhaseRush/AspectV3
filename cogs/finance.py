@@ -77,13 +77,10 @@ class Finance(commands.Cog, name="Finance"):
             return
 
         cmd: List[str] = message.content[1:].split()
-        match cmd:
-            case [str()]:
-                print("case1")
-                await self.fetch_current_price(message, cmd[0], "2d", "15m")
-            case [str(), str(), str()]:
-                print("case2")
-                await self.fetch_current_price(message, *cmd)
+        if len(cmd) == 1:
+            await self.fetch_current_price(message, cmd[0], "2d", "15m")
+        elif len(cmd) == 2:
+            await self.fetch_current_price(message, *cmd)
 
 
 def setup(bot):
