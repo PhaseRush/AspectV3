@@ -8,8 +8,8 @@ import yfinance as yf
 from discord.ext import commands
 
 
-def format_market_cap(market_cap: float) -> str:
-    if market_cap > 1e12:
+def format_large_number(market_cap: float) -> str:
+    if market_cap > 1e15:
         return f"{(market_cap // 10e9) / 100}T"
     elif market_cap > 1e9:
         return f"{(market_cap // 10e6) / 100}B"
@@ -34,21 +34,21 @@ class Finance(commands.Cog, name="Finance"):
         change_absolute = last_price - fast.previous_close
         change_percent = 100 * change_absolute / fast.previous_close
 
-        day_range = f"{fast.day_low: .2f} - {fast.day_high: .2f}"
-        fiftytwo_week_range = f"{fast.year_low: .2f} - {fast.year_high: .2f} ({(100 * fast.year_change):+.2f})"
-        market_cap = format_market_cap(fast.market_cap)
+        day_range = f"{fast.day_low: .2f}-{fast.day_high: .2f}"
+        fiftytwo_week_range = f"{fast.year_low: .2f}-{fast.year_high: .2f} ({(100 * fast.year_change):+.2f})"
+        market_cap = format_large_number(fast.market_cap)
 
         data_formatted = pd.DataFrame.from_dict(info.info, orient='index')
 
-            # f"{'Beta (5Y Monthly)': <12}{info.info['beta']: >25}\n" + \
-        desc: str = f"{'Prev. close': <12}{round(fast.previous_close, 2): >25}\n" + \
-                    f"{'Open': <12}{round(fast.open, 2): >25}\n" + \
-                    f"{'Days range': <12}{day_range: >25}\n" + \
-                    f"{'52 week range': <12}{fiftytwo_week_range: >25}\n" + \
-                    f"{'Volume': <12}{fast.last_volume: >25}\n" + \
-                    f"{'Market cap': <12}{market_cap: >25}\n" + \
-                    f"{'PE ratio(TTM)': <12}{info.info['trailingPE']: >25}\n" + \
-                    f"{'EPS (TTM)': <12}{data_formatted.at['trailingEps', 0]: >25}\n"
+            # f"{'Beta (5Y Monthly)': <15}{info.info['beta']: >25}\n" + \
+        desc: str = f"{'Prev. close': <15}{round(fast.previous_close, 2): >25}\n" + \
+                    f"{'Open': <15}{round(fast.open, 2): >25}\n" + \
+                    f"{'Days range': <15}{day_range: >25}\n" + \
+                    f"{'52 week range': <15}{fiftytwo_week_range: >25}\n" + \
+                    f"{'Volume': <15}{format_large_number(fast.last_volume): >25}\n" + \
+                    f"{'Market cap': <15}{market_cap: >25}\n" + \
+                    f"{'PE ratio(TTM)': <15}{round(info.info['trailingPE'], 2): >25}\n" + \
+                    f"{'EPS (TTM)': <15}{data_formatted.at['trailingEps', 0]: >25}\n"
 
         data = yf.download(ticker, period=period, interval=interval)
         data.drop('Volume', axis=1, inplace=True)
