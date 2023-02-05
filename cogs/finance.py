@@ -133,7 +133,7 @@ class Finance(commands.Cog, name="Finance"):
             interval = cmd[1]
             if not interval.endswith('d') and interval not in valid_intervals:
                 await message.channel.send("Invalid interval, please use number of days, or something from " + ' '.join(valid_intervals))
-            await self.fetch_current_price(message, substitutions.get(cmd[0], cmd[0]), interval, interval_period_link[interval])
+            await self.fetch_current_price(message, substitutions.get(cmd[0], cmd[0]), interval, interval_period_link.get(interval, "15m"))
         elif len(cmd) == 3:
             interval = cmd[1]
             period = cmd[2]
