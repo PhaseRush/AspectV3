@@ -1,7 +1,8 @@
 import ast
 import asyncio
 import copy
-import datetime
+from datetime import datetime
+from pytz import timezone
 import inspect
 import os
 import subprocess
@@ -17,7 +18,7 @@ from contextlib import redirect_stdout
 import traceback
 
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 from Utils import timeit, escape_md
 
@@ -71,6 +72,18 @@ class MetaCog(commands.Cog, name="Meta"):
         self.bot = bot
         self._last_result: Optional[Any] = None
         self.sessions: set[int] = set()
+
+        self.china = datetime.now(timezone('Asia/Shanghai'))
+        self.china_time.start()
+
+    @tasks.loop(seconds=10)
+    async def china_time(self):
+        await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching,
+                                                                 name=self.china.strftime("%m/%d - %H:%M")))
+
+    @china_time.before_loop
+    async def before_activity_update(self):
+        await self.bot.wait_until_ready()
 
     @commands.command()
     async def hello(self, ctx: commands.Context):

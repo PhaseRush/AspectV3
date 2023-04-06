@@ -58,19 +58,19 @@ class Crypto(commands.Cog, name="Crypto"):
         })
         # print("ETH/CAD", json.dumps(self.kraken.fetch_ticker("ETH/CAD")["close"], indent=1))
 
-        self.eth_activity_updater.start()
+        # self.eth_activity_updater.start()
 
-    @tasks.loop(minutes=3)
-    async def eth_activity_updater(self):
-        cad, _ = self.get_price("ETH", "CAD")
-        usd, delta = self.get_price("ETH", "USD")
-        logging.info(f"Ran eth activity loop, {cad:.2f} {usd:.2f}")
-        await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching,
-                                                                 name=f"{cad:.2f}"))
-
-    @eth_activity_updater.before_loop
-    async def before_activity_update(self):
-        await self.bot.wait_until_ready()
+    # @tasks.loop(minutes=3)
+    # async def eth_activity_updater(self):
+    #     cad, _ = self.get_price("ETH", "CAD")
+    #     usd, delta = self.get_price("ETH", "USD")
+    #     logging.info(f"Ran eth activity loop, {cad:.2f} {usd:.2f}")
+    #     await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching,
+    #                                                              name=f"{cad:.2f}"))
+    #
+    # @eth_activity_updater.before_loop
+    # async def before_activity_update(self):
+    #     await self.bot.wait_until_ready()
 
     def get_price(self, origin: str, target: str) -> (float, float):
         if origin == target:

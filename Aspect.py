@@ -4,6 +4,7 @@ import os
 import sys
 import traceback
 from datetime import datetime
+from pytz import timezone
 import time
 from time import perf_counter
 import subprocess
@@ -62,7 +63,9 @@ async def on_ready():
 async def command_log(ctx: commands.Context):
     logging.info(f"{ctx.author} {ctx.message.content} {ctx.message}")
 
+
 cogs_dir = os.path.join(dir, "cogs")
+
 
 def load_cog(ext: str) -> int:
     try:

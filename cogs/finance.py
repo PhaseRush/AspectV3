@@ -145,5 +145,15 @@ class Finance(commands.Cog, name="Finance"):
             if not period.endswith('d') and period not in valid_periods:
                 await message.channel.send("Invalid period, please use number of days, or something from " + ' '.join(valid_periods))
             await self.fetch_current_price(message, substitutions.get(cmd[0], cmd[0]), interval, period)
+
+    @commands.command()
+    async def fsubs(self, ctx: commands.Context):
+        lines = ""
+
+        for k, v in substitutions.items():
+            lines += k + " --> " + v + "\n"
+        await ctx.send(f"Available ticker substitutions:\n```{lines}```")
+
+
 def setup(bot):
     bot.add_cog(Finance(bot))
