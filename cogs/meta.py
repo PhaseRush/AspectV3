@@ -69,15 +69,16 @@ def cleanup_code(content: str) -> str:
 
 class MetaCog(commands.Cog, name="Meta"):
     def __init__(self, bot):
+        self.china = None
         self.bot = bot
         self._last_result: Optional[Any] = None
         self.sessions: set[int] = set()
 
-        self.china = datetime.now(timezone('Asia/Shanghai'))
         self.china_time.start()
 
     @tasks.loop(seconds=10)
     async def china_time(self):
+        self.china = datetime.now(timezone('Asia/Shanghai'))
         await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching,
                                                                  name=self.china.strftime("%m/%d - %H:%M")))
 
