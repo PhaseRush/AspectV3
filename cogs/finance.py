@@ -131,7 +131,7 @@ class Finance(commands.Cog, name="Finance"):
         if message.author.bot:
             return
 
-        if not message.content.startswith("$"):
+        if not message.content.startswith("$") or message.content.startswith("$$"):
             return
 
         cmd: List[str] = message.content[1:].split()
