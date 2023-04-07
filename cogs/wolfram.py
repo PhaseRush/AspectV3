@@ -35,7 +35,7 @@ class Wolfram:
         return file_name, give_warning
 
 
-class WolframCog(commands.Cog, name="Voice"):
+class WolframCog(commands.Cog, name="Wolfram"):
     def __init__(self, bot):
         self.bot = bot
         self.client = Wolfram()

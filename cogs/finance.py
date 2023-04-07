@@ -37,7 +37,8 @@ substitutions = {
     "shintel": "intc"
 }
 
-valid_intervals = ["1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h", "1d", "5d", "1wk", "1mo", "3mo"]  # actually, any 'd' works
+valid_intervals = ["1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h", "1d", "5d", "1wk", "1mo",
+                   "3mo"]  # actually, any 'd' works
 valid_periods = ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"]
 
 interval_period_link = {
@@ -106,6 +107,10 @@ class Finance(commands.Cog, name="Finance"):
         data = yf.download(ticker, period=period, interval=interval)
         data.drop('Volume', axis=1, inplace=True)
         data.plot.line()
+
+        if not os.path.exists('./cache'):
+            os.makedirs('./cache')
+
         file_name = f'./cache/{ticker}-{period}-{interval}-{message.id}.png'
         plt.savefig(file_name)
 
@@ -135,15 +140,19 @@ class Finance(commands.Cog, name="Finance"):
         elif len(cmd) == 2:
             interval = cmd[1]
             if not interval.endswith('d') and interval not in valid_intervals:
-                await message.channel.send("Invalid interval, please use number of days, or something from " + ' '.join(valid_intervals))
-            await self.fetch_current_price(message, substitutions.get(cmd[0], cmd[0]), interval, interval_period_link.get(interval, "15m"))
+                await message.channel.send(
+                    "Invalid interval, please use number of days, or something from " + ' '.join(valid_intervals))
+            await self.fetch_current_price(message, substitutions.get(cmd[0], cmd[0]), interval,
+                                           interval_period_link.get(interval, "15m"))
         elif len(cmd) == 3:
             interval = cmd[1]
             period = cmd[2]
             if not interval.endswith('d') and interval not in valid_intervals:
-                await message.channel.send("Invalid interval, please use number of days, or something from " + ' '.join(valid_intervals))
+                await message.channel.send(
+                    "Invalid interval, please use number of days, or something from " + ' '.join(valid_intervals))
             if not period.endswith('d') and period not in valid_periods:
-                await message.channel.send("Invalid period, please use number of days, or something from " + ' '.join(valid_periods))
+                await message.channel.send(
+                    "Invalid period, please use number of days, or something from " + ' '.join(valid_periods))
             await self.fetch_current_price(message, substitutions.get(cmd[0], cmd[0]), interval, period)
 
     @commands.command()
