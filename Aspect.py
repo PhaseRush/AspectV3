@@ -1,21 +1,18 @@
-import codecs
 import datetime
+import logging
 import os
+import subprocess
 import sys
+import time
 import traceback
 from datetime import datetime
-from pytz import timezone
-import time
 from time import perf_counter
-import subprocess
 
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 
 from cogs.reddit import SubredditLinker
 from config import DISCORD_TOKEN
-
-import logging
 
 dir = os.path.dirname(__file__)
 
