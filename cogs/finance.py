@@ -6,6 +6,8 @@ import discord
 import os
 import matplotlib as mpl
 
+import re
+
 if os.environ.get('DISPLAY', '') == '':
     print('no display found. Using non-interactive Agg backend')
     mpl.use('Agg')
@@ -56,6 +58,7 @@ interval_period_link = {
     "max": "1yr"
 }
 
+dollar_number = re.compile("\$\d{2,}")
 
 class Finance(commands.Cog, name="Finance"):
 
@@ -133,7 +136,9 @@ class Finance(commands.Cog, name="Finance"):
         if message.author.bot:
             return
 
-        if not message.content.startswith("$") or message.content.startswith("$$"):
+        if not message.content.startswith("$") or \
+                message.content.startswith("$$") or \
+                dollar_number.match(message.content):
             return
 
         cmd: List[str] = message.content[1:].split()
