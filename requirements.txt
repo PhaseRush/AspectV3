@@ -1,9 +1,9 @@
 discord~=1.7.3
 requests~=2.27.1
-aiohttp~=3.8.1
+aiohttp~=3.9.1
 paramiko~=2.10.4
-ccxt~=1.82.50
-praw~=7.6.0
+ccxt~=4.2.4
+praw~=7.7.1
 Pillow~=9.1.0
 deepl~=1.10.0
 pinyin~=0.4.0

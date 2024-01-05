@@ -7,6 +7,7 @@ import time
 import traceback
 from datetime import datetime
 from time import perf_counter
+import pytz
 
 import discord
 from discord.ext import commands
@@ -25,7 +26,7 @@ logging.basicConfig(level=logging.INFO,
                         logging.StreamHandler(sys.stdout)
                     ])
 
-logging.info(f"Starting Aspect at {datetime.utcnow()}")
+logging.info(f"Starting Aspect at {datetime.now(pytz.timezone('America/Vancouver'))}")
 
 
 class Aspect(commands.Bot):
